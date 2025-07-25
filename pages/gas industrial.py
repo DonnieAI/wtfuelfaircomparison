@@ -18,7 +18,7 @@ from utils import apply_style_and_logo
 apply_style_and_logo()
 
 #-------------------------------------------------------------------------------------
-df=pd.read_csv("nrg_pc_202_gas_non_householders_data.csv")
+df=pd.read_csv("data/nrg_pc_202_gas_non_householders_data.csv")
 category="gas"
 subcategory="industrial"
 #1 GJ = 0.2778 MWh (approx.)
@@ -30,6 +30,8 @@ band_labels = {
     "TOT_GJ": "Total Average"
 }
 #-------------------------------------------------------------------------------------
+ttf_df = pd.read_csv("data/Dutch_TTF.csv", parse_dates=['Date'])
+
 
 st.title(" Retail Gas Prices for no-household consumers - commercial and industrial ")
 st.markdown("""
@@ -58,7 +60,7 @@ latest_time = max(available_semester_sorted)
 time_band = st.selectbox(
     "Select start semester",
     options=available_semester_sorted,
-    index=available_semester_sorted.index(latest_time)
+    index=len(available_semester_sorted) - 2
 )
 
 # **************************************************************************************
@@ -79,9 +81,9 @@ geo_order = (
 )
 
 custom_colors = {
-    "energy": "#F4D06F",  # Soft pastel yellow
-    "taxes": "#A1C6EA",   # Powder blue
-    "vat": "#F7A072"      # Muted salmon/peach
+    "energy": "#7FDBFF",  # Soft pastel yellow
+    "taxes": "#77DD77",   # Powder blue
+    "vat": "#8EE5EE"      # Muted salmon/peach  #66CDAA  #8EE5EE
 }
 
 df_melted["price"] = df_melted["price"]*1000  # Multiply price by 1000 (e.g., from €/kWh to €/MWh)
@@ -129,13 +131,62 @@ fig1.update_layout(
 
 # Show Plotly chart
 st.plotly_chart(fig1, use_container_width=True, key="price_breakdown_chart")
+#--------------------fg1b data preparation---------------------------------------------------------
 
+# 1. Filter for the selected time band
+df_selected_time = df[df["add_formal_time"] == time_band].copy()
+
+# 2. Compute fiscal impact
+df_selected_time["fiscal_impact"] = 100 * (df_selected_time["taxes"] + df_selected_time["vat"]) / df_selected_time["total"]
+df_selected_time["fiscal_impact"] = df_selected_time["fiscal_impact"].round(1)
+df_fiscal=df_selected_time[["geo","nrg_cons","fiscal_impact"]]
+#df_fiscal["nrg_cons_label"] = df_fiscal["nrg_cons"].map(band_labels)
+
+
+band_order = ["GJ_LT20", "GJ20-199", "GJ_GE200", "TOT_GJ"]
+df_fiscal["nrg_cons"] = pd.Categorical(df_fiscal["nrg_cons"], categories=band_order, ordered=True)
+
+# Create a single-subplot figure
 # Create subplot with 1 row and 2 columns
-fig1b = make_subplots(rows=1, cols=2, subplot_titles=("Plot A", "Plot B"))
+fig1b = make_subplots(rows=1, cols=2, subplot_titles=(f"Fiscal Impact by Consumption Band  {time_band}", "Plot B"))
 
-# Add traces to each subplot
-fig1b.add_trace(go.Scatter(y=[1, 3, 2], name='Line A'), row=1, col=1)
-fig1b.add_trace(go.Bar(y=[2, 1, 3], name='Bar B'), row=1, col=2)
+# Loop through each band and add box
+for band in band_order:
+    values = df_fiscal[df_fiscal["nrg_cons"] == band]["fiscal_impact"]
+    if not values.empty:
+        fig1b.add_trace(
+            go.Box(
+        y=values,
+        name=band_labels.get(band, band),
+        boxpoints="outliers",
+        marker=dict(color="#FFA07A"),
+        line=dict(width=1),
+        # 👇 Add custom hover data
+        customdata=df_fiscal[df_fiscal["nrg_cons"] == band][["geo"]].values,
+        hovertemplate="Country: %{customdata[0]}<br>Fiscal Impact: %{y:.1f}%<extra></extra>"
+    ),
+            row=1, col=1
+        )
+
+fig1b.update_layout(
+    xaxis1=dict(title="Consumption Band", color="white"),
+    yaxis1=dict(title="Fiscal Impact (%)", color="white")
+)
+
+
+
+fig1b.add_trace(
+    go.Scatter(
+        x=[1, 2, 3],
+        y=[2, 1, 4],
+        mode="lines+markers",
+        name="Line Example",
+        marker=dict(color="lightblue")
+    ),
+    row=1, col=2
+)
+
+
 
 # Update layout if needed
 fig1b.update_layout(title_text="Subplot in One Row", height=400)
@@ -170,19 +221,36 @@ df_filtered = df[
 ]
 
 
-fig2 = px.line(
-    df_filtered,
-    x="add_formal_time",  # or "TIME_PERIOD"
-    y="total",
-    color="nrg_cons",
-    markers=True,
-    title=f"Retail  {category} Prices hystorical trend in {selected_country}",
-    labels={
-        "add_formal_time": "Semester",
-        "value": "Price (€/MWh)",  # adjust unit if needed
-        "nrg_cons": "Consumption Band"
-    }
+fig2 = go.Figure()
+
+# Line for semestral retail prices (from df_filtered)
+for band in df_filtered['nrg_cons'].unique():
+    df_band = df_filtered[df_filtered['nrg_cons'] == band]
+    fig2.add_trace(go.Scatter(
+        x=df_band['add_formal_time'],
+        y=df_band['total'],
+        mode='lines+markers',
+        name=f'Retail ({band})'
+    ))
+
+# Daily TTF line (optionally filter for same time range)
+fig2.add_trace(go.Scatter(
+    x=ttf_df['Date'],
+    y=ttf_df['Price'],  # replace 'Price' with your actual column name
+    mode='lines',
+    name='TTF Gas Price (Daily)',
+    line=dict(dash='dot', color='gray')
+))
+
+# Final layout
+fig2.update_layout(
+    title=f"Retail {category} Prices historical trend in {selected_country} with TTF Gas Reference",
+    xaxis_title="Time",
+    yaxis_title="Price (€/MWh)",
+    legend_title="Legend"
 )
+
+
 
 fig2.update_layout(
             #height=40* len(df_filtered["geo"].unique()),  # 30px per country (adjust as needed)
