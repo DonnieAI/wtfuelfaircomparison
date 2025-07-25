@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from pathlib import Path
 
-st.set_page_config(page_title="Dashboard", layout="wide")
+st.set_page_config(page_title="Data", layout="wide")
 from utils import apply_style_and_logo
 
 apply_style_and_logo()

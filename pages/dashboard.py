@@ -12,7 +12,7 @@ st.title("📊 Fuel Price Dashboard")
 
 # Load or define your data (you can replace this with actual CSV or database load)
 # Example DataFrame (replace with your df_fuel_prices)
-df_fuel_prices=pd.read_csv("table_summary.csv")
+df_fuel_prices=pd.read_csv("data/table_summary.csv")
 df_fuel_prices["CATEGORY"] = df_fuel_prices["CATEGORY"].astype("category")
 # Step 1: Create a multi-level Y-axis by combining CATEGORY and FUELS
 y_labels = [df_fuel_prices["CATEGORY"].astype(str), df_fuel_prices["FUELS"]]

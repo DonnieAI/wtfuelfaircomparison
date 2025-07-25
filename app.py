@@ -5,12 +5,8 @@ app dedicated to STREAMLIT APPLICATION
 """
 
 # ───────────────────────────────────────────────────────────────
-#bash
-#cd ~/Documents/PYTHON_STREAMLIT/NEWSRANKER_CLOUD
-# py -m streamlit run app.py
-
-#(projenv) C:\Users\donat\Documents\PYTHON_STREAMLIT>
-#cd FUELPRICES
+#cdm
+#projenv\Scripts\activate
 #streamlit run app.py
 
 # ───────────────────────────────────────────────────────────────
@@ -52,6 +48,7 @@ from utils import apply_style_and_logo
 
 st.sidebar.success(f"Welcome {st.session_state['first_name']}!")
 st.sidebar.button("Logout", on_click=lambda: st.session_state.update(authenticated=False))
+
 
 # Spacer to push the link to the bottom (optional tweak for better placement)
 st.sidebar.markdown("<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
