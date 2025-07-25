@@ -10,7 +10,7 @@ from utils import apply_style_and_logo
 
 apply_style_and_logo()
 # Load your CSV data
-df = pd.read_csv("table_summary.csv")  # adjust the path to your CSV file
+df = pd.read_csv("data/table_summary.csv")  # adjust the path to your CSV file
 
 st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
