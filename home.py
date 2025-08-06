@@ -7,7 +7,7 @@ app dedicated to STREAMLIT APPLICATION
 # ───────────────────────────────────────────────────────────────
 #cdm
 #projenv\Scripts\activate
-#streamlit run app.py
+#streamlit run home.py
 
 # ───────────────────────────────────────────────────────────────
 import streamlit as st
@@ -63,48 +63,56 @@ st.sidebar.markdown(
 # ---------Main content
 st.set_page_config(page_title="Fuel Dashboard", layout="wide")
 st.title("WAVETRANSITION FAIR FUEL COMPARE APPLICATION")
-st.markdown("""
-## Welcome to **FAIR FUEL COMPARE APPLICATION**
+st.markdown(
+    """
+    <h1 style='text-align: center; color: #005680;'>
+        WAVETRANSITION FAIR FUEL COMPARE APPLICATION
+    </h1>
+    """,
+    unsafe_allow_html=True
+)
+
+# --- Centered cover image ---
+from PIL import Image
+cover_img = Image.open("cover.png")
+st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+st.image(cover_img, use_container_width=False, width=800)  # updated
+#st.image(cover_img, use_container_width=True)  # auto fit
 
 
-This web app provides a unified view of major energy fuels — such as **electricity, natural gas, diesel, CNG**, and **LNG** — expressed in **euro per megawatt-hour (€/MWh)**. By converting all fuel prices to a standard energy unit, you can directly compare their relative costs, regardless of fuel type.
+st.markdown("</div>", unsafe_allow_html=True)
 
----
+# --- Welcome text ---
+st.markdown(
+    """
+    <div style='text-align: left; font-size: 20px;'>
+        <p>Welcome to <b>FAIR FUEL COMPARE APPLICATION</b></p>
+        <p>Compare major energy fuels — <b>electricity, natural gas, diesel, CNG</b>, and <b>LNG</b> — 
+        on a consistent <b>€/MWh</b> basis across EU20 countries.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-### 🌍 Coverage: EU20 Snapshot
+# --- Horizontal line ---
+st.markdown("---")
 
-The data shown in this app refers to the **EU20 countries**, offering a European-scale perspective on energy prices. While the app provides a harmonized energy basis (€/MWh), it is important to note that:
+# --- Key Features ---
+st.markdown(
+    """
+    ### 📌 **Key Features**
+    - Energy-based comparison in **€/MWh**
+    - Covers **electricity, gas, CNG, LNG, diesel**, and more
+    - Displays **VAT and excise components** when available
+    - Clear visualizations to identify price differences across Europe
 
-- **Each country** applies its own **fuel pricing structures**, influenced by **local markets**, **regulations**, and **taxation schemes** (such as **VAT** and **excise duties**).
-- Some countries may report prices **with or without fiscal components**, depending on national practices or data availability.
-- Update frequencies and methodologies can vary by fuel type and country.
+    ### 🌍 **Coverage**
+    The data shown in this app refers to the **EU20 countries**, 
+    offering a European-scale perspective on energy prices.
 
-This makes the app a valuable tool for observing both **relative differences** and **structural variations** across Europe.
+    ### ⚠️ **Note**
+    This app focuses on **cross-sectional comparisons** across fuel types and EU20 countries.
+    Time series analysis and market dynamics are addressed in other tools.
+    """
+)
 
----
-
-### 🎯 Purpose
-
-This app offers a **frozen snapshot** of current energy prices, enabling high-level comparisons on a consistent energy basis. While data may come from asynchronous or source-specific reports, the harmonized format supports clearer interpretation and decision-making.
-
----
-
-### 📌 Key Features
-
-- Energy-based comparison in **€/MWh**
-- Covers **electricity, gas, CNG, LNG, diesel**, and more
-- Displays **VAT and excise components** when available
-- Clear visualizations to easily identify price differences across Europe
-
----
-
-### ⚠️ Note
-
-This app focuses on **cross-sectional comparisons** across fuel types and EU20 countries. **Time series analysis** and dynamic market trends are addressed in other specialized tools.
-
----
-
-### 🧭 Start exploring!
-
-Use the filters and charts below to compare fuel prices across **energy types, countries**, and **market segments**.
-""")

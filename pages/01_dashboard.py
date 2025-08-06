@@ -8,9 +8,16 @@ from utils import apply_style_and_logo
 
 apply_style_and_logo()
 
-st.title("📊 Fuel Price Dashboard")
+st.title("🔎 Fuels Energy Comparison Overview")
+st.markdown("""
+            ### 📊 Fuels and Commodity enrgy based comparison
+            #### ⚠️ Prices are adjusted for energy content, but data for different fuels come from varying dates. Values are not strictly simultaneous.
+            
+            """)
+st.markdown(""" 
+            source: Wavetransition - (data sources available in methodology page)
+                        """)
 
-# Load or define your data (you can replace this with actual CSV or database load)
 # Example DataFrame (replace with your df_fuel_prices)
 df_fuel_prices=pd.read_csv("data/table_summary.csv")
 df_fuel_prices["CATEGORY"] = df_fuel_prices["CATEGORY"].astype("category")
@@ -68,7 +75,6 @@ fig.update_layout(
                 linecolor="white"
 )
 )
-
 
 # Show Plotly chart
 st.plotly_chart(fig, use_container_width=True)
