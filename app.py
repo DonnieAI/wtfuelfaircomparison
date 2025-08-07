@@ -7,7 +7,7 @@ app dedicated to STREAMLIT APPLICATION
 # ───────────────────────────────────────────────────────────────
 #cdm
 #projenv\Scripts\activate
-#streamlit run home.py
+#streamlit run app.py
 
 # ───────────────────────────────────────────────────────────────
 import streamlit as st
