@@ -17,11 +17,36 @@ apply_style_and_logo()
 
 
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
-crudes_df=pd.read_csv("data/WB_crude_oil_selection.csv",parse_dates=["Date"])
-brent_bands_df=pd.read_csv("data/WB_brent_min_max_bands.csv")
+last_month="2025-07-01"
+crudes_df=pd.read_csv(f"data/{last_month}_WB_crude_oils_monthly.csv",parse_dates=["Date"])
 #✅--------------------------------------------------------------------------------------------
 
+crudes_df=crudes_df.query("Date > '2008-01-01'")
+
+
+def compute_monthly_min_max(df, price_col):
+    """
+    Compute historical monthly min and max values across all years.
+    
+    Returns a DataFrame with:
+        Month | Min | Max
+    """
+    df = df.copy()
+    df["Date"] = pd.to_datetime(df["Date"])
+    df = df.dropna(subset=[price_col])
+    
+    df["Month"] = df["Date"].dt.month
+    monthly_stats = (
+        df.groupby("Month")[price_col]
+        .agg(Min="min", Max="max")
+        .reset_index()
+    )
+    return monthly_stats
+
 brent_df=crudes_df[["Date", "Crude oil, Brent"]]
+brent_bands_df = compute_monthly_min_max(df=brent_df, price_col="Crude oil, Brent")
+
+
 
 st.title(" Oil crudes ")
 st.markdown("""
