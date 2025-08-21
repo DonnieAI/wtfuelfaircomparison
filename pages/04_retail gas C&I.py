@@ -1,5 +1,5 @@
 """
-Gas prices for non-household consumers - bi-annual data (from 2007 onwards)
+Gas prices for household consumers - bi-annual data (from 2007 onwards)
 nrg_pc_202
 #cd C:\WT\WT_OFFICIAL_APPLICATIONS_REPOSITORY\WT_FAIR_FUEL_COMPARE
 """
@@ -15,24 +15,39 @@ st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
 
+#🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+FOLDER="EUROSTAT"
+flow_id="nrg_pc_203"
+category="gas"
+sub_category="C&I"
+latest_semester="2024-S2"
+latest_month="2025-07-31"
+#🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
+
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
-df=pd.read_csv("data/nrg_pc_202_gas_non_householders_data.csv")
-category="Retail Gas"
-subcategory="C&I"
+df=pd.read_csv(f"data/{latest_semester}_{flow_id}_{category}_{sub_category}_data.csv")
+df.info()
 #1 GJ = 0.2778 MWh (approx.)
 available_bands = df["nrg_cons"].unique()
 band_labels = {
-    "GJ_LT20": "< GJ_LT20",
-    "GJ20-199": "GJ20-199",
-    "GJ_GE200": "GJ_GE200",
-    "TOT_GJ": "TOT_GJ"
+    "GJ1000-9999": "GJ1000-9999",
+    "GJ10000-99999": "GJ10000-99999",
+    "GJ100000-999999": "GJ100000-999999",
+    "GJ1000000-3999999": "GJ1000000-3999999",
+    "GJ_LT1000": "< GJ1000",
+    "GJ_GE4000000": "≥ GJ4000000",
+    "TOT_GJ": "Total (GJ)"
 }
-ttf_df = pd.read_csv("data/Dutch_TTF.csv", parse_dates=['Date'])
+start_date=min(df["add_formal_time"])
+
+ttf_df = pd.read_csv(f"data/{latest_month}_ttf.csv", parse_dates=['Date'])
+ttf_df=ttf_df.query("Date >=@start_date")
 
 #✅--------------------------------------------------------------------
-st.title(f" 🔥 {category} Prices for {subcategory}")
-st.markdown("""
-            ### 📊 Retail Gas Price no-household - cross country view 
+st.title(f" 🔥 {category} prices for {sub_category}")
+st.markdown(f"""
+            ### 📊 Retail {category} price for {sub_category} - cross country view 
             
             """)
 st.markdown(""" 
@@ -41,9 +56,9 @@ st.markdown("""
 # Reverse mapping for lookup
 label_to_code = {v: k for k, v in band_labels.items()}
 selected_label = st.selectbox(
-    "Select consumption band (total average as default) ",
+    "Select consumption band (GJ_GE200 as default) ",
     options=band_labels.values(),
-    index=list(band_labels.values()).index("GJ_GE200")  # 👈 default index
+    index=list(band_labels.values()).index("Total (GJ)")  # 👈 default index
 )
 selected_band = label_to_code[selected_label]
 available_semester = df["add_formal_time"].unique()
@@ -54,9 +69,9 @@ latest_time = max(available_semester_sorted)
 
 # Set selectbox with default at latest_time
 time_band = st.selectbox(
-    "Select start semester",
+    "Select start semester (the latest available as default)",
     options=available_semester_sorted,
-    index=len(available_semester_sorted) - 2
+    index=len(available_semester_sorted) - 1
 )
 
 # **************************************************************************************
@@ -99,7 +114,7 @@ fig1a = px.bar(
             barmode="relative",
             category_orders={"geo": geo_order},
             color_discrete_map=custom_colors,
-            title=f"{category} Price Breakdown by Country || semester {time_band} || {selected_label} consumption band"
+            title=f"{category} price breakdown by country || semester {time_band} || {selected_label} consumption band"
 )
 
 # Assuming df_latest is filtered for latest time and includes total prices
@@ -147,7 +162,15 @@ df_selected_time["fiscal_impact"] = df_selected_time["fiscal_impact"].round(1)
 df_fiscal=df_selected_time[["geo","nrg_cons","fiscal_impact"]]
 #df_fiscal["nrg_cons_label"] = df_fiscal["nrg_cons"].map(band_labels)
 
-band_order = ["GJ_LT20", "GJ20-199", "GJ_GE200", "TOT_GJ"]
+band_order = [
+    'GJ1000-9999',
+    'GJ10000-99999',
+    'GJ100000-999999',
+    'GJ1000000-3999999',
+    'GJ_LT1000',
+    'GJ_GE4000000',
+    'TOT_GJ'
+]
 df_fiscal["nrg_cons"] = pd.Categorical(df_fiscal["nrg_cons"], categories=band_order, ordered=True)
 df_energy=df_selected_time[["geo","nrg_cons","energy"]]
 df_energy["nrg_cons"] = pd.Categorical(df_energy["nrg_cons"], categories=band_order, ordered=True)
@@ -156,10 +179,9 @@ df_energy["nrg_cons"] = pd.Categorical(df_energy["nrg_cons"], categories=band_or
 # 💹FIG1B💹---------------------------------------------------------------------
 fig1b = make_subplots(
     rows=1, cols=2,
-    subplot_titles=(f"{category}-{subcategory} || Fiscal Impact by Consumption Band || {time_band}",
-                    f"{category}-{subcategory} ||Energy Price Component by Consumption Band || {time_band}")
+    subplot_titles=(f"{category}-{sub_category} || Fiscal Impact by Consumption Band || {time_band}",
+                    f"{category}-{sub_category} ||Energy Price Component by Consumption Band || {time_band}")
 )
-
 
 # First subplot - Fiscal Impact
 for band in band_order:
@@ -218,18 +240,26 @@ st.plotly_chart(fig1b, use_container_width=True, key="subplot_breakdown_chart")
 st.divider()  # <--- Streamlit's built-in separator
 #---------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------
-st.markdown("""
-            ### 📈 Retail Gas Price no-household - single country historical trend
+st.markdown(f"""
+            ### 📈 Retail {category} price {sub_category} - single country historical trend
             """)
 st.markdown(""" 
-            source: EUROSTAT - bi-annual data (from 2007 onwards)
+            source: EUROSTAT - bi-annual data (from 2007 onwards) || TTF prices : Word Bank || Exchage rate USD EUR : ECB
                         """)
 
 
 available_countries = df["geo"].unique()
 df["total"]=df["total"]*1000 # EUR/MWH
 selected_country = st.selectbox("Select country", sorted(available_countries))
-selected_bands = ["GJ_LT20", "GJ20-199", "GJ_GE200"]
+selected_bands = [
+    'GJ1000-9999',
+    'GJ10000-99999',
+    'GJ100000-999999',
+    'GJ1000000-3999999',
+    'GJ_LT1000',
+    'GJ_GE4000000',
+    'TOT_GJ'
+]
 df_filtered = df[
     (df["geo"] == selected_country) &
     (df["nrg_cons"].isin(selected_bands))
@@ -258,7 +288,7 @@ for i, band in enumerate(df_filtered['nrg_cons'].unique()):
 # Daily TTF line (optionally filter for same time range)
 fig2a.add_trace(go.Scatter(
     x=ttf_df['Date'],
-    y=ttf_df['Price'],  # replace 'Price' with your actual column name
+    y=ttf_df['price_eur/mwh'],  # replace 'Price' with your actual column name
     mode='lines',
     name='TTF Gas Price (Daily)',
     line=dict(dash='dot', color="#ABF67B")
@@ -266,7 +296,7 @@ fig2a.add_trace(go.Scatter(
 
 # Final layout
 fig2a.update_layout(
-    title=f"Retail {category} Prices historical trend in {selected_country} with TTF Gas Reference",
+    title=f"Retail {category} prices historical trend in {selected_country} with TTF monthly price",
     xaxis_title="Time",
     yaxis_title="Price (€/MWh)",
     legend_title="Legend"
@@ -274,7 +304,7 @@ fig2a.update_layout(
 
 fig2a.update_layout(
             #height=40* len(df_filtered["geo"].unique()),  # 30px per country (adjust as needed)
-            yaxis_title=f"{category} {subcategory} Price (€/MWh)",
+            yaxis_title=f"{category} {sub_category} Price (€/MWh)",
             xaxis_title="Semester",
             paper_bgcolor="#005680",
             plot_bgcolor="#005680",

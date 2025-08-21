@@ -49,7 +49,6 @@ from utils import apply_style_and_logo
 st.sidebar.success(f"Welcome {st.session_state['first_name']}!")
 st.sidebar.button("Logout", on_click=lambda: st.session_state.update(authenticated=False))
 
-
 # Spacer to push the link to the bottom (optional tweak for better placement)
 st.sidebar.markdown("<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
 
