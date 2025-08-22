@@ -23,7 +23,6 @@ crudes_df=pd.read_csv(f"data/{last_month}_WB_crude_oils_monthly.csv",parse_dates
 
 crudes_df=crudes_df.query("Date > '2008-01-01'")
 
-
 def compute_monthly_min_max(df, price_col):
     """
     Compute historical monthly min and max values across all years.
@@ -60,14 +59,19 @@ st.markdown("""
 #------------------------------------------------------------------------------
 # 📈 FIG 1 - CRUDES TRENDS
 #------------------------------------------------------------------------------
+
+
+pastel_blue_green = [
+    "#A7D5F2", "#94CCE8", "#81C3DD", "#6FBBD3", "#5DB2C8",
+    "#6DC0B8", "#7DCFA8", "#8DDC99", "#9CE98A", "#ABF67B"
+]
+
 custom_colors = {
-    "Crude oil, average": "#7FDBFF",  # blue
-    "Crude oil, Brent": "#77DD77",    # orange
-    "Crude oil, Dubai": "#8EE5EE",    # green
-    "Crude oil, WTI": "#d62728"       # red
+    "Crude oil, average": "#A7D5F2",  # blue
+    "Crude oil, Brent": "#7DCFA8",    # orange
+    "Crude oil, Dubai": "#9CE98A",    # green
+    "Crude oil, WTI": "#ABF67B"       # red
 }
-
-
 
 
 fig1 = px.line(
@@ -85,7 +89,7 @@ fig1 = px.line(
 
 # Update figure layout
 fig1.update_layout(
-    title="Crude Oil Prices (Monthly , source Worldbank",
+    title="Crude Oil Prices (Monthly , source Worldbank)",
     xaxis_title="Date",
     yaxis_title="Price (USD per barrel)",
     legend_title="Oil Type",
