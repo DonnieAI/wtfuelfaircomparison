@@ -28,24 +28,26 @@ latest_month="2025-07-31"
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
 df=pd.read_csv(f"data/{latest_semester}_{flow_id}_{category}_{sub_category}_data.csv")
 df.info()
-#1 GJ = 0.2778 MWh (approx.)
+
+
+#--Band defintion
 available_bands = df["nrg_cons"].unique()
-band_labels = {
-    "GJ1000-9999": "GJ1000-9999",
-    "GJ10000-99999": "GJ10000-99999",
-    "GJ100000-999999": "GJ100000-999999",
-    "GJ1000000-3999999": "GJ1000000-3999999",
-    "GJ_LT1000": "< GJ1000",
-    "GJ_GE4000000": "≥ GJ4000000",
-    "TOT_GJ": "Total (GJ)"
-}
+def create_band_label_dict(df, column_name):
+    unique_bands = df[column_name].unique()
+    band_labels = {band: band for band in unique_bands}
+    return band_labels
+band_labels = create_band_label_dict(df, "nrg_cons")
+last_value = list(band_labels.values())[-1]
+print(band_labels)
+
+
 start_date=min(df["add_formal_time"])
 
 ttf_df = pd.read_csv(f"data/{latest_month}_ttf.csv", parse_dates=['Date'])
 ttf_df=ttf_df.query("Date >=@start_date")
 
 #✅--------------------------------------------------------------------
-st.title(f" 🔥 {category} prices for {sub_category}")
+st.title(f" 🔥 {category} prices for {sub_category} 🏭")
 st.markdown(f"""
             ### 📊 Retail {category} price for {sub_category} - cross country view 
             
@@ -56,9 +58,9 @@ st.markdown("""
 # Reverse mapping for lookup
 label_to_code = {v: k for k, v in band_labels.items()}
 selected_label = st.selectbox(
-    "Select consumption band (GJ_GE200 as default) ",
+    "Select consumption band (TOT_GJ as default) ",
     options=band_labels.values(),
-    index=list(band_labels.values()).index("Total (GJ)")  # 👈 default index
+    index=list(band_labels.values()).index("TOT_GJ")  # 👈 default index
 )
 selected_band = label_to_code[selected_label]
 available_semester = df["add_formal_time"].unique()
@@ -317,6 +319,26 @@ fig2a.update_layout(
 # Show Plotly chart
 st.plotly_chart(fig2a, use_container_width=True,key="historical_chart")
 
+#---------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#---------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 
+st.markdown("""
+     #### Gas - Commercial & Industrial (C&I)
 
-
+| Band               | Description            | Example Facility                        | Est. m³/year       |
+|--------------------|------------------------|-----------------------------------------|--------------------|
+| GJ_LT1000          | <1,000 GJ/year         | Small restaurant or office              | <26,850            |
+| GJ1000-9999        | 1,000–9,999 GJ/year    | Medium hotel, school                    | 26,850–268,400     |
+| GJ10000-99999      | 10,000–99,999 GJ/year  | Large bakery, brewery                   | 268,500–2,684,900  |
+| GJ100000-999999    | 100,000–999,999 GJ/year| Chemical plants                         | 2.685M–26.85M      |
+| GJ1000000-3999999  | 1M–3.99M GJ/year       | Steel mills, fertilizer plants          | 26.85M–107.3M      |
+| GJ_GE4000000       | ≥4M GJ/year            | Petrochemical complexes                 | 107.4M+            |
+| TOT_GJ             | Total industrial gas consumption | Aggregate                     | -                  |       
+           
+            
+            
+            
+            """)

@@ -1,6 +1,6 @@
 """
-Electricity prices for non-household consumers - bi-annual data (from 2007 onwards)
-nrg_pc_205
+Electricity prices for non household C&I consumers - bi-annual data (from 2007 onwards)
+nrg_pc_204
 #cd C:\WT\WT_OFFICIAL_APPLICATIONS_REPOSITORY\WT_FAIR_FUEL_COMPARE
 """
 import streamlit as st
@@ -15,26 +15,41 @@ st.set_page_config(page_title="test", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
 
+
+#🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+FOLDER="EUROSTAT"
+flow_id="nrg_pc_205"
+category="electricity"
+sub_category="C&I"
+latest_semester="2024-S2"
+latest_month="2025-07-31"
+#🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
+
 #✅------------------------DATA EXTRACTION----------------------------------------------------
 
-df=pd.read_csv("nrg_pc_205_electricity_non-householders_data.csv")
-category="Electricity"
-subcategory="C&I"
+df=pd.read_csv(f"data/{latest_semester}_{flow_id}_{category}_{sub_category}_data.csv")
+df.info()
+
+#--Band defintion
 available_bands = df["nrg_cons"].unique()
-band_labels = {
-    "MWH_LT20": "< 20 MWh",
-    "MWH20-499": "20–499 MWh",
-    "MWH500-1999": "500–1,999 MWh",
-    "MWH2000-19999": "2,000–19,999 MWh",
-    "MWH20000-69999": "20,000–69,999 MWh",
-    "MWH70000-149999": "70,000–149,999 MWh",
-    "MWH_GE150000": "150,000+ MWh",
-    "TOT_KWH": "Total Average"
-}
+def create_band_label_dict(df, column_name):
+    unique_bands = df[column_name].unique()
+    band_labels = {band: band for band in unique_bands}
+    return band_labels
+band_labels = create_band_label_dict(df, "nrg_cons")
+last_value = list(band_labels.values())[-1]
+print(band_labels)
+
+
+start_date=min(df["add_formal_time"])
+
+ttf_df = pd.read_csv(f"data/{latest_month}_ttf.csv", parse_dates=['Date'])
+ttf_df=ttf_df.query("Date >=@start_date")
+
 #✅--------------------------------------------------------------------
-st.title(f"{category} Prices for {subcategory}")
-st.markdown("""
-            ### 📊 Retail Electricity Price no-household - cross country view 
+st.title(f" 🔌 {category} prices for {sub_category} 🏭")
+st.markdown(f"""
+            ### 📊 Retail {category} price for {sub_category} - cross country view 
             
             """)
 st.markdown(""" 
@@ -47,7 +62,7 @@ label_to_code = {v: k for k, v in band_labels.items()}
 selected_label = st.selectbox(
     "Select consumption band (total average as default) ",
     options=band_labels.values(),
-    index=list(band_labels.values()).index("Total Average")  # 👈 default index
+    index=list(band_labels.values()).index(last_value)  # 👈 default index
 )
 selected_band = label_to_code[selected_label]
 
@@ -148,26 +163,20 @@ df_selected_time["fiscal_impact"] = df_selected_time["fiscal_impact"].round(1)
 df_fiscal=df_selected_time[["geo","nrg_cons","fiscal_impact"]]
 #df_fiscal["nrg_cons_label"] = df_fiscal["nrg_cons"].map(band_labels)
 
-band_order = ["GJ_LT20", "GJ20-199", "GJ_GE200", "TOT_GJ"]
-band_order = [
-    "MWH_LT20","MWH20-499", "MWH500-1999",  "MWH2000-19999",
-    "MWH20000-69999", "MWH70000-149999", "MWH_GE150000", "TOT_KWH"
-    ]
-
-df_fiscal["nrg_cons"] = pd.Categorical(df_fiscal["nrg_cons"], categories=band_order, ordered=True)
+df_fiscal["nrg_cons"] = pd.Categorical(df_fiscal["nrg_cons"], categories=band_labels, ordered=True)
 df_energy=df_selected_time[["geo","nrg_cons","energy"]]
-df_energy["nrg_cons"] = pd.Categorical(df_energy["nrg_cons"], categories=band_order, ordered=True)
+df_energy["nrg_cons"] = pd.Categorical(df_energy["nrg_cons"], categories=band_labels, ordered=True)
 
 
 # 💹FIG1B💹---------------------------------------------------------------------
 fig1b = make_subplots(
     rows=1, cols=2,
-    subplot_titles=(f"{category}-{subcategory} || Fiscal Impact by Consumption Band || {time_band}",
-                    f"{category}-{subcategory} ||Energy Price Component by Consumption Band || {time_band}")
+    subplot_titles=(f"{category}-{sub_category} || Fiscal Impact by Consumption Band || {time_band}",
+                    f"{category}-{sub_category} ||Energy Price Component by Consumption Band || {time_band}")
 )
 
 # First subplot - Fiscal Impact
-for band in band_order:
+for band in band_labels:
     values = df_fiscal[df_fiscal["nrg_cons"] == band]["fiscal_impact"]
     if not values.empty:
         fig1b.add_trace(
@@ -185,7 +194,7 @@ for band in band_order:
         )
 
 # Second subplot - Energy Price (same categories as first)
-for band in band_order:
+for band in band_labels:
     values = df_energy[df_energy["nrg_cons"] == band]["energy"] * 1000
     if not values.empty:
         fig1b.add_trace(
@@ -224,24 +233,20 @@ st.plotly_chart(fig1b, use_container_width=True, key="subplot_breakdown_chart")
 st.divider()  # <--- Streamlit's built-in separator
 #---------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------
-st.markdown("""
-            ### 📈 Retail Electricity Price no-household - single country historical trend
+st.markdown(f"""
+            ### 📈 Retail {category} price {sub_category} - single country historical trend
             """)
 st.markdown(""" 
-            source: EUROSTAT - bi-annual data (from 2007 onwards)
+            source: EUROSTAT - bi-annual data (from 2007 onwards) || TTF prices : Word Bank || Exchage rate USD EUR : ECB
                         """)
 
 available_countries = df["geo"].unique()
 df["total"]=df["total"]*1000 # EUR/MWH
 selected_country = st.selectbox("Select country", sorted(available_countries))
-selected_bands = [
-    "MWH_LT20","MWH20-499", "MWH500-1999",  "MWH2000-19999",
-    "MWH20000-69999", "MWH70000-149999", "MWH_GE150000", "TOT_KWH"
-    ]
 
 df_filtered = df[
     (df["geo"] == selected_country) &
-    (df["nrg_cons"].isin(selected_bands))
+    (df["nrg_cons"].isin(band_labels))
 ]
 
 
@@ -266,8 +271,13 @@ for i, band in enumerate(df_filtered['nrg_cons'].unique()):
     ))
 
 # Daily TTF line (optionally filter for same time range)
-
-
+fig2a.add_trace(go.Scatter(
+    x=ttf_df['Date'],
+    y=ttf_df['price_eur/mwh'],  # replace 'Price' with your actual column name
+    mode='lines',
+    name='TTF Gas Price (Daily)',
+    line=dict(dash='dot', color="#ABF67B")
+))
 
 # Final layout
 fig2a.update_layout(
@@ -279,7 +289,7 @@ fig2a.update_layout(
 
 fig2a.update_layout(
             #height=40* len(df_filtered["geo"].unique()),  # 30px per country (adjust as needed)
-            yaxis_title=f"{category} {subcategory} Price (€/MWh)",
+            yaxis_title=f"{category} {sub_category} Price (€/MWh)",
             xaxis_title="Semester",
             paper_bgcolor="#005680",
             plot_bgcolor="#005680",
@@ -291,3 +301,29 @@ fig2a.update_layout(
 
 # Show Plotly chart
 st.plotly_chart(fig2a, use_container_width=True,key="historical_chart")
+
+#---------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#---------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
+
+st.markdown("""
+            #### Electricity - Commercial & Industrial (C&I)
+
+| Band              | Description               | Example Facility                                   |
+|-------------------|---------------------------|----------------------------------------------------|
+| MWH_LT20          | <20 MWh/year              | Small retail store or café                         |
+| MWH20-499         | 20–499 MWh/year           | Hotel, small warehouse, or office block            |
+| MWH500-1999       | 500–1,999 MWh/year        | Medium factory, school, hospital                   |
+| MWH2000-19999     | 2,000–19,999 MWh/year     | Industrial laundries, large supermarkets           |
+| MWH20000-69999    | 20,000–69,999 MWh/year    | Data centers, pharma plants, casting workshops     |
+| MWH70000-149999   | 70,000–149,999 MWh/year   | Steel rolling, chlorine plants                     |
+| MWH_GE150000      | ≥150,000 MWh/year         | Aluminum smelters, hyperscale data centers         |
+| TOT_KWH           | Total industrial electricity use | Aggregate  
+            
+            
+            
+            
+            
+            """)
