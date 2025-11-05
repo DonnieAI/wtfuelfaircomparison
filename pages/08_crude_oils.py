@@ -17,7 +17,7 @@ apply_style_and_logo()
 
 
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
-last_month="2025-07-01"
+last_month="2025-08-31"
 crudes_df=pd.read_csv(f"data/{last_month}_WB_crude_oils_monthly.csv",parse_dates=["Date"])
 #✅--------------------------------------------------------------------------------------------
 
@@ -44,8 +44,7 @@ def compute_monthly_min_max(df, price_col):
 
 brent_df=crudes_df[["Date", "Crude oil, Brent"]]
 brent_bands_df = compute_monthly_min_max(df=brent_df, price_col="Crude oil, Brent")
-
-
+#-----------------------------------------------------------------------------------------------
 
 st.title(" Oil crudes ")
 st.markdown("""

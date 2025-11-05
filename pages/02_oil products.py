@@ -10,10 +10,51 @@ import plotly.graph_objects as go
 import plotly.express as px 
 from pathlib import Path
 from plotly.subplots import make_subplots
+import numpy as np
 
 st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
+
+#GRAPHICS----------------------------------------------
+palette_blue = [
+    "#A7D5F2",  # light blue
+    "#94CCE8",
+    "#81C3DD",
+    "#6FBBD3",
+    "#5DB2C8",
+    "#A9DEF9",  # baby blue
+]
+
+palette_green = [
+    "#6DC0B8",  # pastel teal
+    "#7DCFA8",
+    "#8DDC99",
+    "#9CE98A",
+    "#ABF67B",
+    "#C9F9D3",  # mint green
+    "#C4E17F",  # lime green
+]
+
+palette_other = [
+    "#FFD7BA",  # pastel orange
+    "#FFE29A",  # pastel yellow
+    "#FFB6C1",  # pastel pink
+    "#D7BDE2",  # pastel purple
+    "#F6C6EA",  # light rose
+    "#F7D794",  # peach
+    "#E4C1F9",  # lavender
+]
+
+units_selection = [
+    "€/1000L",   # Super_95
+    "€/1000L",   # Diesel
+    "€/1000L",   # Heating_Oil
+    "€/ton", # Heavy_Fuel_Oil
+    "€/ton", # Heavy_Fuel_Oil_Type_III
+    "€/1000L"    # GPL
+]
+
 
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
 # Extraction of oil product with tax
@@ -34,8 +75,18 @@ print("Latest wotaxes:", latest_wotaxes.name)
 df_withtaxes = pd.read_parquet(latest_withtaxes)
 df_wotaxes   = pd.read_parquet(latest_wotaxes)
 
+#df is the final merged dataframe
 df=df_withtaxes
 df["Price_wotax"] = df_wotaxes["Price"]
+P_t = df["Price"].values
+P_next = np.roll(P_t, -1)
+price_delta = (P_t - P_next) / P_next
+price_delta[-1] = np.nan
+df["Price_delta"] = price_delta*100 #in %
+#df["Price_delta"] = df["Price"].pct_change(fill_method=None).fillna(0)
+df["Price_delta_forward"] = df["Price"].pct_change(periods=-1)
+#df["Price_delta"] = df["Price"].pct_change(periods=-1)
+df["Tax_impact"]=(df["Price"]-df["Price_wotax"])/df["Price"]*100
 
 
 df.dropna()
@@ -82,8 +133,8 @@ df_filtered = df.query("Fuel_Type == @selected_product and Date == @selected_wee
 # **************************************************************************************
 
 df_melted = df_filtered.melt(
-    id_vars=["Country", "Date", "Fuel_Type"],
-    value_vars=["Price", "Price_wotax"],
+    id_vars=["Country", "Date", "Fuel_Type","Tax_impact"],
+    value_vars=["Price", "Price_wotax","Tax_impact"],
     var_name="component",
     value_name="price"
 )
@@ -112,68 +163,98 @@ custom_colors = {
 }
 
 
-# 💹FIG1A💹---------------------------------------------------------------------
-fig1a = px.bar(
-            df_melted,
-            y="Country",
-            x="price",
-            color="component",
-            barmode="group",
-            category_orders={"Country": geo_order},
-            color_discrete_map=custom_colors,
-            title=f"{selected_product}|| Price Breakdown by Country || week  {selected_week}"
+# Define the figure with better spacing and widths
+fig1 = make_subplots(
+    rows=1,
+    cols=2,
+    shared_xaxes=True,
+    horizontal_spacing=0.05,
+    column_widths=[0.9, 0.1],
+    subplot_titles=(
+        f"{selected_product} || Price Breakdown by Country || Week {selected_week}",
+        "Tax Burden [%]"
+    )
 )
 
-# Assuming df_latest is filtered for latest time and includes total prices
+# Bar chart for price breakdown (grouped bars, one per component)
+for component, comp_df in df_melted.groupby("component"):
+    fig1.add_trace(
+        go.Bar(
+            y=comp_df["Country"],
+            x=comp_df["price"],
+            name=component,
+            orientation='h',
+            marker_color=custom_colors.get(component, None)
+        ),
+        row=1,
+        col=1
+    )
+
+# Add total price labels as a Scatter text overlay
 total_labels = df_filtered.set_index("Country").loc[geo_order]["Price"]
-
-fig1a.add_trace(
-            go.Scatter(
-                x=total_labels.values,
-                y=total_labels.index,
-                mode="text",
-                text=[f"{v:.0f}" for v in total_labels.values],  # e.g., "251.3"
-                textposition="middle right",
-                textfont=dict(
-                            color="white",   # your color
-                            size=16,
-                            #family="Bold"  # or any system font with bold style
-                            ),
-                showlegend=False
-            )
+fig1.add_trace(
+    go.Scatter(
+        x=total_labels.values,
+        y=total_labels.index,
+        mode="text",
+        text=[f"{v:.0f}" for v in total_labels.values],
+        textposition="middle right",
+        textfont=dict(color="white", size=16),
+        showlegend=False
+    ),
+    row=1,
+    col=1  # Make sure it's added to the correct subplot
 )
 
-units_selection = [
-    "€/1000L",   # Super_95
-    "€/1000L",   # Diesel
-    "€/1000L",   # Heating_Oil
-    "€/ton", # Heavy_Fuel_Oil
-    "€/ton", # Heavy_Fuel_Oil_Type_III
-    "€/1000L"    # GPL
-]
-
-# Create a dictionary using index mapping
-unit_map = dict(zip(products_selection, units_selection))
-
-# Get the right unit for the selected product
-unit_measure = unit_map.get(selected_product , "")
-
-
-fig1a.update_layout(
-            height=40* len(df_filtered["Country"].unique()),  # 30px per country (adjust as needed)
-            xaxis_title=f"{category} Price {unit_measure}",
-            yaxis_title="Country",
-            paper_bgcolor="#005680",
-            plot_bgcolor="#005680",
-            font=dict(size=14, color="#00274d"),
-            legend_title="Component",
-            xaxis=dict(color="white", gridcolor="rgba(255,255,255,0.1)"),
-            yaxis=dict(color="white", gridcolor="rgba(255,255,255,0.1)")
+# Add tax burden as a line plot in second subplot
+fig1.add_trace(
+    go.Scatter(
+        y=df_melted["Country"],
+        x=df_melted["Tax_impact"],
+        mode="markers",
+        name="Tax Burden [%]",
+        #line=dict(color="red", width=4, dash="dash"),
+        marker=dict(
+            color=palette_other[2],
+            size=8,
+            symbol="diamond",
+            #line=dict(width=1, color='white')
+        )
+    ),
+    row=1,
+    col=2
 )
 
-# Show Plotly chart
-st.plotly_chart(fig1a, use_container_width=True, key="price_breakdown_chart")
+# Get the unit for the selected product
+unit_measure = dict(zip(products_selection, units_selection)).get(selected_product, "")
 
+# Configure layout and styling
+fig1.update_layout(
+    height=40 * len(df_filtered["Country"].unique()),
+    xaxis_title=f"{category} Price {unit_measure}",
+    yaxis_title="Country",
+    paper_bgcolor="#005680",
+    plot_bgcolor="#005680",
+    font=dict(size=14, color="#ffffff"),
+    legend_title="Component",
+    barmode='group',
+)
+
+# Apply consistent axis formatting
+fig1.update_xaxes(color="white", gridcolor="rgba(255,255,255,0.1)", row=1, col=1)
+fig1.update_yaxes(color="white", gridcolor="rgba(255,255,255,0.1)", categoryorder="array", categoryarray=geo_order)
+
+fig1.update_layout(
+    height=1000,
+    showlegend=True,
+    paper_bgcolor="#005680",
+    plot_bgcolor="#005680",
+    font=dict(size=14, color="#ffffff"),
+    legend_title="Price Type",
+)
+
+# Show in Streamlit
+st.plotly_chart(fig1, use_container_width=True, key="price_breakdown_chart")
 
 #---------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------
@@ -184,7 +265,7 @@ st.markdown("""
             ### 📈 Oil Products Price - single country historical trend
             """)
 st.markdown(""" 
-            source: EU DG Energy - weekly data
+            source: EU DG Energy - weekly data - nominals terms
                         """)
 
 countries_selection=(
@@ -202,48 +283,79 @@ selected_country = st.selectbox(
 df_filtered_fig2 = df.query("Country == @selected_country and Fuel_Type==@selected_product")
 # **************************************************************************************
 
-# --------------------------------------------
-# 2. Melt 'Price' and 'Price_wotax' for tidy format
-# --------------------------------------------
+# --- Step 1: Melt dataframe ---
 df_melted_fig2 = df_filtered_fig2.melt(
-    id_vars=["Date"],
+    id_vars=["Date", "Price_delta_forward"],  # keep delta for later
     value_vars=["Price", "Price_wotax"],
     var_name="Price_Type",
     value_name="Price_Value"
 )
 
+# Optional: map price type labels
 df_melted_fig2["Price_Type"] = df_melted_fig2["Price_Type"].map({
     "Price": "Price with Tax",
     "Price_wotax": "Price without Tax"
 })
 
-
-
-# Use px.line with fill='tozeroy'
-fig2 = px.line(
-    df_melted_fig2,
-    x="Date",
-    y="Price_Value",
-    color="Price_Type",  # 👈 This tells Plotly to draw separate lines
-    color_discrete_map=custom_colors,  # Optional: your custom color map
-    line_shape='linear'
+# --- Step 2: Create subplot ---
+fig2 = make_subplots(
+    rows=2,
+    cols=1,
+    shared_xaxes=True,
+    vertical_spacing=0.1,
+    subplot_titles=(
+        f"{selected_product} || Historical Prices || Week {selected_week}",
+        "Weekly Variation [%]"
+    )
 )
-# Apply fill to area under the line
-for trace in fig2.data:
-    trace.update(fill='tozeroy')  # turns line into filled area
 
-# Layout
+# --- Step 3: Add filled lines (Price and Price_wotax) to row=1 ---
+for price_type, subdf in df_melted_fig2.groupby("Price_Type"):
+    fig2.add_trace(
+        go.Scatter(
+            x=subdf["Date"],
+            y=subdf["Price_Value"],
+            name=price_type,
+            fill="tozeroy",
+            mode="lines",
+            line=dict(
+                color=custom_colors.get(price_type, None),
+                shape="linear"
+            )
+        ),
+        row=1,
+        col=1
+    )
+
+# --- Step 4: Add Price_delta_forward to row=2 ---
+fig2.add_trace(
+    go.Bar(
+        x=df_filtered_fig2["Date"],
+        y=df_filtered_fig2["Price_delta_forward"] * 100,  # Convert to percentage
+        name="Weekly % Change",
+        marker_color=palette_other[4]
+    ),
+    row=2,
+    col=1
+)
+
+# --- Step 5: Update layout ---
 fig2.update_layout(
-    title=f"{selected_product} || Historical Price Trend in {selected_country}",
-    yaxis_title=f"{selected_product} Price {unit_measure}",
-    xaxis_title="Weeks",
+    height=600,
+    showlegend=True,
     paper_bgcolor="#005680",
     plot_bgcolor="#005680",
-    font=dict(size=14, color="#00274d"),
-    xaxis=dict(color="white", gridcolor="rgba(255,255,255,0.1)"),
-    yaxis=dict(color="white", gridcolor="rgba(255,255,255,0.1)"),
-    legend_title=""
+    font=dict(size=14, color="#ffffff"),
+    legend_title="Price Type",
 )
 
+# Format axes
+#fig2.update_xaxes(title_text="Date", color="white", gridcolor="rgba(255,255,255,0.1)")
+fig2.update_yaxes(title_text=f"Price [{unit_measure}]", color="white", row=1, col=1)
+fig2.update_yaxes(title_text="Δ [%]", color="white", row=2, col=1)
 
-st.plotly_chart(fig2, use_container_width=True,key="historical_chart")
+# Optional: reverse x-axis if you want most recent on left
+# fig2.update_xaxes(autorange="reversed")
+
+# In Streamlit
+st.plotly_chart(fig2, use_container_width=True, key="historical_price_chart")
