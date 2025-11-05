@@ -47,11 +47,6 @@ palette_other = [
     "#E4C1F9",  # lavender
 ]
 
-pastel_blue_green = [
-    "#A7D5F2", "#94CCE8", "#81C3DD", "#6FBBD3", "#5DB2C8",
-    "#6DC0B8", "#7DCFA8", "#8DDC99", "#9CE98A", "#ABF67B"
-]
-
 
 custom_colors = {
     "energy": "#A7D5F2",  
@@ -60,10 +55,6 @@ custom_colors = {
 }
 
 
-trendcolors = [
-    "#A7D5F2", "#94CCE8", "#81C3DD", "#6FBBD3", "#5DB2C8",
-    "#6DC0B8", "#7DCFA8", "#8DDC99", "#9CE98A", "#ABF67B"
-]
 #🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
 FOLDER="EUROSTAT"
 flow_id="nrg_pc_204"
@@ -88,11 +79,9 @@ print(band_labels)
 
 start_date=min(df["add_formal_time"])
 
-ttf_df = pd.read_csv(f"data/{latest_month}_ttf.csv", parse_dates=['Date'])
-ttf_df=ttf_df.query("Date >=@start_date")
 
 #✅--------------------------------------------------------------------
-st.title(f" 🔌 {category} prices for {sub_category} 🏠")
+st.title(f" 🔌 {category} prices | {sub_category} 🏠")
 st.markdown(f"""
             ### 📊 Retail {category} price for {sub_category} - cross country view 
             
@@ -120,18 +109,11 @@ st.markdown("""
                       
             
            """ )
-
 #---------------------------------------------------------------------------------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
 #---------------------------------------------------------------------------------------------------------------------------
-
-
-# Reverse mapping for lookup
-#label_to_code = {v: k for k, v in band_labels.items()}
-
-# Get sorted unique values from the 'nrg_cons' column
+# 1️⃣ FIG----------------
 available_bands = sorted(df["nrg_cons"].unique().tolist())
-
 selected_band = st.selectbox(
                     "Select consumption band (total average as default) ",
                     options=available_bands,
@@ -142,10 +124,8 @@ selected_band = st.selectbox(
 
 available_semester = df["add_formal_time"].unique()
 available_semester_sorted = sorted(available_semester)  # ensure consistent order
-
 # Get the latest (most recent) semester
 latest_time = max(available_semester_sorted)
-
 # Set selectbox with default at latest_time
 time_band = st.selectbox(
             "Select start semester",
@@ -167,25 +147,14 @@ df_filtered = (
 )
 # **************************************************************************************
 
-#df_melted = df_filtered.melt(
-#    id_vars=["geo", "add_formal_time", "nrg_cons"],
-#    value_vars=["energy", "taxes", "vat"],
-#    var_name="component",
-#    value_name="price"
-#)
-
 geo_order = (
     df_filtered
     .sort_values("total", ascending=True)["geo"]
     .tolist()
 )
 
-# Multiply price by 1000 (e.g., from €/kWh to €/MWh)
-#df_melted["price"] = df_melted["price"]*1000
 # Assuming df_latest is filtered for latest time and includes total prices
 total_labels = df_filtered.set_index("geo").loc[geo_order]["total"]
-
-# 💹FIG1💹---------------------------------------------------------------------
 
 # Step 5: Create subplots
 fig1 = make_subplots(
@@ -200,7 +169,6 @@ fig1 = make_subplots(
     )
 )
 
-# Step 6: Add stacked bar chart (left subplot)
 components = ["energy", "taxes", "vat"]
 for comp in components:
     fig1.add_trace(
@@ -215,7 +183,6 @@ for comp in components:
         col=1
     )
 
-# Step 7: Add total labels as text (optional)
 fig1.add_trace(
     go.Scatter(
         x=total_labels.values,
@@ -232,57 +199,68 @@ fig1.add_trace(
 
 # Step 8: Add Tax Share scatter markers (right subplot)
 fig1.add_trace(
-    go.Scatter(
-        x=df_filtered.set_index("geo").loc[geo_order]["Tax_Share"],
-        y=geo_order,
-        mode="markers",
-        name="Tax Share",
-        marker=dict(
-            color=palette_other[2],
-            size=8,
-            symbol="diamond"
-        )
-    ),
-    row=1,
-    col=2
+                go.Scatter(
+                            x=df_filtered.set_index("geo").loc[geo_order]["Tax_Share"],
+                            y=geo_order,
+                            mode="markers",
+                            name="Tax Share",
+                            marker=dict(
+                                color=palette_other[2],
+                                size=8,
+                                symbol="diamond"
+                            )
+                        ),
+                        row=1,
+                        col=2
 )
 
 # Step 9: Set layout and styling
 fig1.update_layout(
-    barmode="relative",  # ✅ stacked bars
-    height=40 * len(geo_order),
-    xaxis_title="Electricity Price (€/MWh)",
-    yaxis_title="Country (EA20)",
-    paper_bgcolor="#005680",
-    plot_bgcolor="#005680",
-    font=dict(size=14, color="white"),
-    legend_title="Component",
-    margin=dict(t=80, b=40, l=100, r=40),
-    xaxis=dict(color="white", gridcolor="rgba(255,255,255,0.1)"),
-    xaxis2=dict(color="white", gridcolor="rgba(255,255,255,0.1)"),
+                    barmode="relative",  # ✅ stacked bars
+                    height=40 * len(geo_order),
+                    xaxis_title="Electricity Price (€/MWh)",
+                    yaxis_title="Country (EA20)",
+                    paper_bgcolor="#005680",
+                    plot_bgcolor="#005680",
+                    font=dict(size=14, color="white"),
+                    legend_title="Component",
+                    margin=dict(t=80, b=40, l=100, r=40),
+                    xaxis=dict(color="white", gridcolor="rgba(255,255,255,0.1)"),
+                    xaxis2=dict(color="white", gridcolor="rgba(255,255,255,0.1)"),
 )
 
 # Step 10: Sync y-axis order between both subplots
 fig1.update_yaxes(
-    categoryorder="array",
-    categoryarray=geo_order,
-    row=1,
-    col=1
+                    categoryorder="array",
+                    categoryarray=geo_order,
+                    row=1,
+                    col=1
 )
 fig1.update_yaxes(
-    categoryorder="array",
-    categoryarray=geo_order,
-    row=1,
-    col=2
+                    categoryorder="array",
+                    categoryarray=geo_order,
+                    row=1,
+                    col=2
 )
 
 # Step 11: Show chart in Streamlit
 st.plotly_chart(fig1, use_container_width=True)
 
 
-#-------------------------------------------------------------------------------
-df_selected_time = df[df["add_formal_time"] == time_band].copy()
+#--------------------------------------------------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#---------------------------------------------------------------------------------------------
 
+# 2️⃣ FIG----------------
+st.markdown(f"""
+            ### 📊 Retail {category} price for {sub_category} - Fiscal impact  
+            
+            """)
+st.markdown(""" 
+            source: EUROSTAT - bi-annual data (from 2007 onwards 
+                        """)
+
+df_selected_time = df[df["add_formal_time"] == time_band].copy()
 # 2. Compute fiscal impact
 df_selected_time["fiscal_impact"] = 100 * (df_selected_time["taxes"] + df_selected_time["vat"]) / df_selected_time["total"]
 df_selected_time["fiscal_impact"] = df_selected_time["fiscal_impact"].round(1)
@@ -294,80 +272,106 @@ df_energy=df_selected_time[["geo","nrg_cons","energy"]]
 df_energy["nrg_cons"] = pd.Categorical(df_energy["nrg_cons"], categories=band_labels, ordered=True)
 
 
-# 💹FIG1B💹---------------------------------------------------------------------
-fig1b = make_subplots(
-    rows=1, cols=2,
-    subplot_titles=(f"{category}-{sub_category} || Fiscal Impact by Consumption Band || {time_band}",
-                    f"{category}-{sub_category} ||Energy Price Component by Consumption Band || {time_band}")
+# --------------------------------------
+# Titles
+# --------------------------------------
+#main_title = "Fiscal Impact vs Energy Price by Consumption Band"
+subplot_title_left = f"Fiscal Impact || {time_band}"
+subplot_title_right = f"Energy Price || {time_band}"
+
+# --------------------------------------
+# Setup subplot
+# --------------------------------------
+fig2 = make_subplots(
+    rows=1,
+    cols=2,
+    subplot_titles=(
+        subplot_title_left, 
+        subplot_title_right),
+    horizontal_spacing=0.1,
+    column_widths=[0.5, 0.5]
 )
 
-# First subplot - Fiscal Impact
-for band in band_labels:
-    values = df_fiscal[df_fiscal["nrg_cons"] == band]["fiscal_impact"]
-    if not values.empty:
-        fig1b.add_trace(
+# --------------------------------------
+# First subplot – Fiscal Impact
+# --------------------------------------
+for band_code, band_label in band_labels.items():
+    df_band = df_fiscal[df_fiscal["nrg_cons"] == band_code]
+    if not df_band.empty:
+        fig2.add_trace(
             go.Box(
-                y=values,
-                name=band_labels.get(band, band),
+                y=df_band["fiscal_impact"],
+                name=band_label,
                 boxpoints="outliers",
                 marker=dict(color="#94CCE8"),
                 line=dict(width=1),
-                customdata=df_fiscal[df_fiscal["nrg_cons"] == band][["geo"]].values,
+                customdata=df_band[["geo"]].values,
                 hovertemplate="Country: %{customdata[0]}<br>Fiscal Impact: %{y:.1f}%<extra></extra>",
-                showlegend=False# ✅ legend visible
+                showlegend=False
             ),
-            row=1, col=1
+            row=1,
+            col=1
         )
 
-# Second subplot - Energy Price (same categories as first)
-for band in band_labels:
-    values = df_energy[df_energy["nrg_cons"] == band]["energy"] * 1000
-    if not values.empty:
-        fig1b.add_trace(
+# --------------------------------------
+# Second subplot – Energy Price (€/MWh)
+# --------------------------------------
+for band_code, band_label in band_labels.items():
+    df_band = df_energy[df_energy["nrg_cons"] == band_code]
+    if not df_band.empty:
+        fig2.add_trace(
             go.Box(
-                y=values,
-                name=band_labels.get(band, band),  # same x-category label
+                y=df_band["energy"] * 1000,  # scale to €/MWh
+                name=band_label,
                 boxpoints="outliers",
-                marker=dict(color="#94CCE8"),  # different color if needed
+                marker=dict(color="#94CCE8"),
                 line=dict(width=1),
-                customdata=df_energy[df_energy["nrg_cons"] == band][["geo"]].values,
-                hovertemplate="Country: %{customdata[0]}<br>Energy Price: %{y:.1f}<extra></extra>",
-                showlegend=False  # ✅ legend no visible
+                customdata=df_band[["geo"]].values,
+                hovertemplate="Country: %{customdata[0]}<br>Energy Price: %{y:.1f} €/MWh<extra></extra>",
+                showlegend=False
             ),
-            row=1, col=2
+            row=1,
+            col=2
         )
 
-
-# Layout
-fig1b.update_layout(
-    xaxis1=dict(title="Consumption Band"),
-    yaxis1=dict(title="Fiscal Impact (%)"),
-    xaxis2=dict(title="Consumption Band"),
-    yaxis2=dict(title="Energy Price (EUR/MWh)"),
-    title_text="Fiscal Impact vs Energy Price by Consumption Band",
-    height=400,
-    showlegend=True
+# --------------------------------------
+# Layout and styling
+# --------------------------------------
+fig2.update_layout(
+    height=500,
+    #title_x=0.5,
+    font=dict(size=14, color="white"),
+    paper_bgcolor="#005680",
+    plot_bgcolor="#005680",
+    margin=dict(t=80, b=60, l=60, r=60)
 )
 
+# Axis titles
+fig2.update_xaxes(title_text="Consumption Band", row=1, col=1)
+fig2.update_yaxes(title_text="Fiscal Impact (%)", row=1, col=1)
 
+fig2.update_xaxes(title_text="Consumption Band", row=1, col=2)
+fig2.update_yaxes(title_text="Energy Price (EUR/MWh)", row=1, col=2)
+
+# --------------------------------------
 # Display in Streamlit
-st.plotly_chart(fig1b, use_container_width=True, key="subplot_breakdown_chart")
+# --------------------------------------
+st.plotly_chart(fig2, use_container_width=True, key="subplot_breakdown_chart")
 #--------------------------------------------------------------------------------
 
 # 💹FIG2💹---------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
 #---------------------------------------------------------------------------------------------------------------------------
+#3️⃣ FIG-----------
+
 
 st.markdown(f"""
             ### 📈 Retail {category} price {sub_category} - single country historical trend
             """)
 st.markdown(""" 
-            source: EUROSTAT - bi-annual data (from 2007 onwards) || TTF prices : Word Bank || Exchage rate USD EUR : ECB
+            source: EUROSTAT - bi-annual data (from 2007 onwards) 
                         """)
-
-#df["total"]=df["total"]*1000 # EUR/MWH
-
 
 selected_band_2 = st.selectbox(
                     "Select consumption band (total average as default) ",
@@ -375,8 +379,6 @@ selected_band_2 = st.selectbox(
                     index=available_bands.index("TOT_KWH"),
                      key="band_selectbox_2"
                 )
-
-
 
 available_countries=(
                     df["geo"]
@@ -389,7 +391,6 @@ selected_country = st.selectbox(
                     options=available_countries,
                     index=available_countries.index("EU27_2020")  # 👈 set default selection by index
                 )
-
 
 # **************************************************************************************
 df_filtered_2 = (
@@ -404,56 +405,167 @@ df_filtered_2 = (
         total=lambda x: x["total"] * 1000
     )
     .assign(Tax_Share=lambda  x: (x["vat"]+x["taxes"])/x["total"]*100)
+    .assign(variation =lambda x: x["total"].pct_change()*100)
 )
+df_filtered_2.index = pd.to_datetime(df_filtered_2.index)
 # **************************************************************************************
-
+ave_EU=(
+   df
+   .query("nrg_cons == @selected_band_2  and geo == 'EU27_2020'")
+    .set_index("add_formal_time")
+    .sort_index()
+    .assign(total=lambda x: x["total"] * 1000)  # scale to €/MWh
+ 
+)
+ave_EU.index = pd.to_datetime(ave_EU.index) 
 
 # 💹FIG2💹---------------------------------------------------------------------
 
-# Create subplot: 2 rows, shared x-axis
-fig2 = make_subplots(
+# -------------------------------
+# Subplot Titles Setup (fallback to blank if missing info)
+# -------------------------------
+
+if not category or not sub_category:
+    title_price = ""
+
+# -------------------------------
+# Create Subplots Layout
+# -------------------------------
+fig3 = make_subplots(
     rows=2,
     cols=1,
     shared_xaxes=True,
     vertical_spacing=0.12,
     row_heights=[0.7, 0.3],
     subplot_titles=(
-        f"TES [EJ] - {selected_country}",
-        "Year-over-Year Change [%]"
-    )
+        f"Retail {category} | price {sub_category} | {selected_country} | {selected_band_2}", 
+       "Semester-over-Semester Change [%]")
 )
 
-fig2.add_trace(
-    go.Scatter(
+# -------------------------------
+# FIG2 Top Plot: Total Price Trend (Lines + Markers)
+# -------------------------------
+fig3.add_trace(
+                go.Scatter(
+                    x=df_filtered_2.index,
+                    y=df_filtered_2["total"],
+                    mode="lines+markers",
+                    fill='tozeroy',
+                    name=f"Retail {category} price {sub_category}",
+                    line=dict(color=palette_blue[1], width=4, dash="dash"),
+                    marker=dict(
+                        color=palette_blue[1],
+                        size=8,
+                        symbol="diamond",
+                        line=dict(width=1, color='white')
+                    )
+                ),
+                row=1,
+                col=1
+)
+fig3.add_trace(
+                go.Scatter(
+                    x=ave_EU.index,
+                    y=ave_EU["total"],
+                    mode="lines+markers",
+                    #fill='tozeroy',
+                    name=f"Retail {category} price {sub_category} average EU",
+                    line=dict(
+                        color=palette_other[1], width=2, dash="dash"),
+                    marker=dict(
+                        color=palette_other[1],
+                        size=1,
+                        symbol="diamond",
+                        line=dict(width=3, color='white')
+                    )
+                ),
+                row=1,
+                col=1
+)
+# -------------------------------
+# Bottom Plot: Semester Variation (Bars)
+# -------------------------------
+fig3.add_trace(
+    go.Bar(
         x=df_filtered_2.index,
-        y=df_filtered_2["total"]
-            
+        y=df_filtered_2["variation"],
+        name="Variation (%)",
+        marker_color=[
+            "#F5B7B1" if v < 0 else "#A9DFBF"
+            for v in df_filtered_2["variation"]
+        ]
+    ),
+    row=2,
+    col=1
+)
+
+# -------------------------------
+# Axis Formatting
+# -------------------------------
+fig3.update_yaxes(
+    title_text=f"{category} {sub_category} Price (€/MWh)",
+    row=1,
+    col=1,
+    title_font=dict(color='white'),
+    tickfont=dict(color='white'),
+    gridcolor="rgba(255,255,255,0.1)"
+)
+
+fig3.update_yaxes(
+    title_text="Variation (%)",
+    row=2,
+    col=1,
+    title_font=dict(color='white'),
+    tickfont=dict(color='white'),
+    gridcolor="rgba(255,255,255,0.1)"
+)
+
+fig3.update_xaxes(
+    title_text="Semester",
+    row=2,
+    col=1,
+    title_font=dict(color='white'),
+    tickfont=dict(color='white'),
+    gridcolor="rgba(255,255,255,0.1)"
+)
+
+# -------------------------------
+# Layout Styling
+# -------------------------------
+fig3.update_layout(
+    height=800,
+    paper_bgcolor="#005680",
+    plot_bgcolor="#005680",
+    font=dict(size=14, color="white"),
+    margin=dict(t=100, l=80, r=50, b=60),
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="left",
+        x=0,
+        font=dict(color="white")
     )
-          
-    
+)
+st.plotly_chart(fig3, use_container_width=True,key="historical_chart")
+
+
+#----------------------------------------------------------------------
+st.markdown("---")  # horizontal line separator
+#----------------------------------------------------------------------
+# Prepare CSV for download
+csv = df.to_csv(index=True).encode("utf-8")
+# Download button
+st.download_button(
+    label=f"⬇️ Download data for {category} | {sub_category} ",
+    data=csv,
+    file_name=f"Data_{category}_{sub_category}.csv",
+    mime="text/csv",
 )
 
-
-fig2.update_layout(
-            #height=40* len(df_filtered["geo"].unique()),  # 30px per country (adjust as needed)
-            yaxis_title=f"{category} {sub_category} Price (€/MWh)",
-            xaxis_title="Semester",
-            paper_bgcolor="#005680",
-            plot_bgcolor="#005680",
-            font=dict(size=14, color="#00274d"),
-            #legend_title="Component",
-            xaxis=dict(color="white", gridcolor="rgba(255,255,255,0.1)"),
-            yaxis=dict(color="white", gridcolor="rgba(255,255,255,0.1)")
-)
-
-# Show Plotly chart
-st.plotly_chart(fig2, use_container_width=True,key="historical_chart")
-
-#---------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
-#---------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------
 
 st.markdown("""
 📊 **Understanding Household Electricity Prices Across Consumption Bands**

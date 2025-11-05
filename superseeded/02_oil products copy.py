@@ -94,17 +94,6 @@ category="Oil Products"
 subcategory="Oil Products"
 
 
-#✅-----------------------BRENT DATA EXTRACTION-----------------------------------------------------
-last_month="2025-09-30"
-crudes_df=pd.read_csv(f"data/{last_month}_WB_crude_oils_monthly.csv",parse_dates=["Date"])
-#✅-----------------------------------------------------------------------------------------
-crudes_df=crudes_df.query("Date > '2008-01-01'")
-brent_df=crudes_df[["Date", "Crude oil, Brent"]]
-# CONVERSION TO EUR
-brent_df["Brent_EURMWh"]=brent_df["Crude oil, Brent"]*6.2898  #bbl/1000 liters
-brent_df["Date"] = pd.to_datetime(brent_df["Date"])
-
-
 #✅--------------------------------------------------------------------
 st.title(f" ⛽ {category} Prices")
 st.markdown("""
@@ -337,25 +326,6 @@ for price_type, subdf in df_melted_fig2.groupby("Price_Type"):
         row=1,
         col=1
     )
-
-
-fig2.add_trace(
-        go.Scatter(
-            x=brent_df["Date"],
-            y=brent_df["Brent_EURMWh"],
-            name=price_type,
-            fill="tozeroy",
-            mode="lines",
-            line=dict(
-                color=palette_other[2],
-                shape="linear"
-            )
-        ),
-        row=1,
-        col=1
-    )
-
-
 
 # --- Step 4: Add Price_delta_forward to row=2 ---
 fig2.add_trace(
