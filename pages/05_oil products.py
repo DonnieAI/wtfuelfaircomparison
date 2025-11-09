@@ -12,7 +12,8 @@ from pathlib import Path
 from plotly.subplots import make_subplots
 import numpy as np
 
-st.set_page_config(page_title="Dashboard", layout="wide")
+# --- Setup ---
+st.set_page_config(page_title="Energy Dashboard", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
 
@@ -46,6 +47,13 @@ palette_other = [
     "#E4C1F9",  # lavender
 ]
 
+
+custom_colors = {
+    "Price with Tax":palette_blue[0],  
+    "Price without Tax": palette_green[0],   # Powder blue
+   # "vat": "#8DDC99"      # Muted salmon/peach  #66CDAA  #8EE5EE
+}
+
 units_selection = [
     "€/1000L",   # Super_95
     "€/1000L",   # Diesel
@@ -55,11 +63,16 @@ units_selection = [
     "€/1000L"    # GPL
 ]
 
+# Define the threshold date
+threshold = pd.Timestamp('2016-01-04')
+threshold_str=threshold .strftime("%Y-%m-%d")
+
+
+
 
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
 # Extraction of oil product with tax
 files = list(Path("data").glob("*.parquet"))
-
 # latest "withtaxes"
 withtaxes_files = [f for f in files if "withtaxes" in f.stem]
 latest_withtaxes = max(withtaxes_files, key=lambda f: pd.to_datetime(f.stem.split("_")[0]))
@@ -95,20 +108,25 @@ subcategory="Oil Products"
 
 
 #✅-----------------------BRENT DATA EXTRACTION-----------------------------------------------------
-last_month="2025-09-30"
-crudes_df=pd.read_csv(f"data/{last_month}_WB_crude_oils_monthly.csv",parse_dates=["Date"])
-#✅-----------------------------------------------------------------------------------------
-crudes_df=crudes_df.query("Date > '2008-01-01'")
-brent_df=crudes_df[["Date", "Crude oil, Brent"]]
-# CONVERSION TO EUR
-brent_df["Brent_EURMWh"]=brent_df["Crude oil, Brent"]*6.2898  #bbl/1000 liters
-brent_df["Date"] = pd.to_datetime(brent_df["Date"])
+#last_month="2025-09-30"
+brent_raw_df=pd.read_csv(f"data/2025-10-31_EIA_brent_weekly.csv",parse_dates=["Date"])
+brent_df=(
+            brent_raw_df
+            .dropna()
+            .query("Date >@threshold")
+            .assign(Brent_EURMWh=lambda x: x["Brent_Price"]*6.2898) #!!!FAKE miss XR USD EUR
+            
+    )
+brent_df = brent_df.copy()  # recommended
+brent_df["Brent_norm"] = brent_df["Brent_Price"] / brent_df["Brent_Price"].iloc[0]
+#✅-----------------------BRENT DATA EXTRACTION-----------------------------------------------------
 
 
 #✅--------------------------------------------------------------------
+#1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️
 st.title(f" ⛽ {category} Prices")
-st.markdown("""
-            ### 📊 Oil Products Price - cross country view (data from March 2005)
+st.markdown(f"""
+            ### 📊 Oil Products Price - cross country view (data from {threshold_str})
             
             """)
 st.markdown(""" 
@@ -125,7 +143,6 @@ selected_product = st.selectbox(
     options=products_selection
 )
 
-
 weeks_selection = (
     df["Date"]
     .dropna()
@@ -133,9 +150,12 @@ weeks_selection = (
     .tolist()
 )
 
+# Filter weeks after the threshold
+filtered_weeks = [d for d in weeks_selection if d > threshold]
+# Show selectbox (default to first available date after threshold)
 selected_week = st.selectbox(
-    "Select a week (by default the last available)",
-    options=[d.strftime("%Y-%m-%d") for d in weeks_selection],
+    "Select a week (by default the first available after threshold)",
+    options=[d.strftime("%Y-%m-%d") for d in filtered_weeks],
     index=0
 )
 
@@ -161,18 +181,6 @@ geo_order = (
     .sort_values("Price", ascending=False)["Country"]
     .tolist()
 )
-
-pastel_blue_green = [
-    "#A7D5F2", "#94CCE8", "#81C3DD", "#6FBBD3", "#5DB2C8",
-    "#6DC0B8", "#7DCFA8", "#8DDC99", "#9CE98A", "#ABF67B"
-]
-
-custom_colors = {
-    "Price with Tax": "#A7D5F2",  
-    "Price without Tax": "#6DC0B8",   # Powder blue
-   # "vat": "#8DDC99"      # Muted salmon/peach  #66CDAA  #8EE5EE
-}
-
 
 # Define the figure with better spacing and widths
 fig1 = make_subplots(
@@ -256,29 +264,28 @@ fig1.update_xaxes(color="white", gridcolor="rgba(255,255,255,0.1)", row=1, col=1
 fig1.update_yaxes(color="white", gridcolor="rgba(255,255,255,0.1)", categoryorder="array", categoryarray=geo_order)
 
 fig1.update_layout(
-    height=1000,
-    showlegend=True,
-    paper_bgcolor="#005680",
-    plot_bgcolor="#005680",
-    font=dict(size=14, color="#ffffff"),
-    legend_title="Price Type",
+                    height=1000,
+                    showlegend=True,
+                    paper_bgcolor="#005680",
+                    plot_bgcolor="#005680",
+                    font=dict(size=14, color="#ffffff"),
+                    legend_title="Price Type",
 )
 
 # Show in Streamlit
 st.plotly_chart(fig1, use_container_width=True, key="price_breakdown_chart")
 
-#---------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
-#---------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+#2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣
 st.markdown("""
             ### 📈 Oil Products Price - single country historical trend
             """)
 st.markdown(""" 
             source: EU DG Energy - weekly data - nominals terms
                         """)
-
 countries_selection=(
                     df["Country"]
                    .unique()
@@ -291,101 +298,169 @@ selected_country = st.selectbox(
 )
 
 # **************************************************************************************
-df_filtered_fig2 = df.query("Country == @selected_country and Fuel_Type==@selected_product")
-# **************************************************************************************
+# Example check before filtering
+if not pd.api.types.is_datetime64_any_dtype(df["Date"]):
+    raise TypeError("The 'Date' column must be of type datetime64[ns]")
 
-# --- Step 1: Melt dataframe ---
-df_melted_fig2 = df_filtered_fig2.melt(
-    id_vars=["Date", "Price_delta_forward"],  # keep delta for later
-    value_vars=["Price", "Price_wotax"],
-    var_name="Price_Type",
-    value_name="Price_Value"
+df_filtered_fig2 = (df
+                    .query("Country == @selected_country and Fuel_Type==@selected_product and Date>=@threshold")
+                    .assign(Energy_Component_norm=lambda x:x["Price_wotax"]/x["Price_wotax"].iloc[-1])
 )
-
-# Optional: map price type labels
-df_melted_fig2["Price_Type"] = df_melted_fig2["Price_Type"].map({
-    "Price": "Price with Tax",
-    "Price_wotax": "Price without Tax"
-})
+df_filtered_fig2.set_index("Date", inplace=True)
+# **************************************************************************************
+eu_data=(
+            df
+            .query("Country == 'EU' and Fuel_Type==@selected_product and Date>=@threshold")
+   
+)
+eu_data.set_index("Date", inplace=True)
 
 # --- Step 2: Create subplot ---
 fig2 = make_subplots(
-    rows=2,
-    cols=1,
-    shared_xaxes=True,
-    vertical_spacing=0.1,
-    subplot_titles=(
-        f"{selected_product} || Historical Prices || Week {selected_week}",
-        "Weekly Variation [%]"
-    )
-)
-
-# --- Step 3: Add filled lines (Price and Price_wotax) to row=1 ---
-for price_type, subdf in df_melted_fig2.groupby("Price_Type"):
-    fig2.add_trace(
-        go.Scatter(
-            x=subdf["Date"],
-            y=subdf["Price_Value"],
-            name=price_type,
-            fill="tozeroy",
-            mode="lines",
-            line=dict(
-                color=custom_colors.get(price_type, None),
-                shape="linear"
-            )
-        ),
-        row=1,
-        col=1
-    )
-
+                        rows=2,
+                        cols=1,
+                        shared_xaxes=True,
+                        vertical_spacing=0.1,
+                        subplot_titles=(
+                            f"{selected_product} || Historical Prices || Week {selected_week}",
+                            "Weekly Variation [%]"
+                        )
+                    )
 
 fig2.add_trace(
         go.Scatter(
-            x=brent_df["Date"],
-            y=brent_df["Brent_EURMWh"],
-            name=price_type,
-            fill="tozeroy",
-            mode="lines",
-            line=dict(
-                color=palette_other[2],
-                shape="linear"
-            )
-        ),
-        row=1,
-        col=1
+                    x=df_filtered_fig2.index,
+                    y=df_filtered_fig2["Price"],
+                    name=f"{selected_product} | {selected_country}",
+                   # fill="tozeroy",
+                    mode="lines",
+                    line=dict(
+                        color=palette_blue[3] ,           #custom_colors.get(price_type, None),
+                        shape="linear"
+                    )
+                ),
+                row=1,
+                col=1
     )
 
+fig2.add_trace(
+        go.Scatter(
+                    x=eu_data.index,
+                    y=eu_data["Price"],
+                    name=f"{selected_product} | EU",
+                    #fill="tozeroy",
+                    mode="lines",
+                    line=dict(
+                        color=palette_other[3] ,           #custom_colors.get(price_type, None),
+                        shape="linear"
+                    )
+                ),
+                row=1,
+                col=1
+    )
 
 
 # --- Step 4: Add Price_delta_forward to row=2 ---
 fig2.add_trace(
     go.Bar(
-        x=df_filtered_fig2["Date"],
-        y=df_filtered_fig2["Price_delta_forward"] * 100,  # Convert to percentage
-        name="Weekly % Change",
-        marker_color=palette_other[4]
-    ),
-    row=2,
-    col=1
-)
+                x=df_filtered_fig2.index,
+                y=df_filtered_fig2["Price_delta_forward"] * 100,  # Convert to percentage
+                name="Weekly % Change",
+                marker_color=palette_blue[3]
+            ),
+            row=2,
+            col=1
+        )
 
 # --- Step 5: Update layout ---
 fig2.update_layout(
-    height=600,
-    showlegend=True,
-    paper_bgcolor="#005680",
-    plot_bgcolor="#005680",
-    font=dict(size=14, color="#ffffff"),
-    legend_title="Price Type",
+                height=800,
+                showlegend=True,
+                paper_bgcolor="#005680",
+                plot_bgcolor="#005680",
+                font=dict(size=14, color="#ffffff"),
+                legend_title="Price Type",
 )
 
 # Format axes
 #fig2.update_xaxes(title_text="Date", color="white", gridcolor="rgba(255,255,255,0.1)")
-fig2.update_yaxes(title_text=f"Price [{unit_measure}]", color="white", row=1, col=1)
-fig2.update_yaxes(title_text="Δ [%]", color="white", row=2, col=1)
+fig2.update_yaxes(
+                title_text=f"Price [{unit_measure}]", 
+                color="white", 
+                row=1, 
+                col=1)
+fig2.update_yaxes(
+                title_text="Δ [%]", 
+                color="white", 
+                row=2, 
+                col=1)
 
 # Optional: reverse x-axis if you want most recent on left
 # fig2.update_xaxes(autorange="reversed")
 
 # In Streamlit
 st.plotly_chart(fig2, use_container_width=True, key="historical_price_chart")
+
+#-------------------------------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-------------------------------------------------------------------------
+
+st.markdown("""
+            ### 📈 Correlation Energy Component vs Brent 
+            """)
+st.markdown(""" 
+            source: EU DG Energy - weekly data - nominals terms | EIA Brent weekly data
+                        """)
+
+fig3 = go.Figure()
+
+
+fig3.add_trace(
+    go.Scatter(
+        x=df_filtered_fig2.index,
+        y=df_filtered_fig2["Energy_Component_norm"],
+        name=f"{selected_product} | energy | {selected_country}",
+       # fill="tozeroy",
+        mode="lines",
+        line=dict(
+            color=palette_blue[3],
+            shape="linear"
+        )
+    )
+)
+
+
+fig3.add_trace(
+        go.Scatter(
+                    x=brent_df["Date"],
+                    y=brent_df["Brent_norm"],
+                    name="Brent",
+                    #fill="tozeroy",
+                    mode="lines",
+                    line=dict(
+                        color=palette_other[2],
+                        shape="linear"
+                    )
+                ),
+
+    )
+
+fig3.update_layout(
+                height=600,
+                showlegend=True,
+                paper_bgcolor="#005680",
+                plot_bgcolor="#005680",
+                font=dict(size=14, color="#ffffff"),
+                legend_title="Price Type",
+                title_text=f"Price Normalized (100 = {threshold_str})"
+
+
+)
+
+
+ 
+       
+
+
+# Display in Streamlit
+st.plotly_chart(fig3, use_container_width=True, key="brent")

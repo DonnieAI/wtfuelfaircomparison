@@ -10,16 +10,56 @@ import plotly.express as px
 import pandas as pd
 from pathlib import Path
 from plotly.subplots import make_subplots
+import os
+import glob
 
 st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
 
 
+def load_latest_coal_file(folder="data"):
+    # Pattern to match files like 2025-08-31_WB_crude_oils_monthly.csv
+    pattern = os.path.join(folder, "*_WB_coal_monthly.csv")
+    
+    # Get list of matching files
+    files = glob.glob(pattern)
+
+    if not files:
+        raise FileNotFoundError("No coal CSV files found in the data folder.")
+
+    # Extract date part from each file name and find the latest
+    def extract_date(file_path):
+        basename = os.path.basename(file_path)
+        date_part = basename.split("_")[0]
+        return pd.to_datetime(date_part, format="%Y-%m-%d", errors="coerce")
+
+    files_with_dates = [(file, extract_date(file)) for file in files]
+    files_with_dates = [(file, date) for file, date in files_with_dates if pd.notnull(date)]
+
+    if not files_with_dates:
+        raise ValueError("No valid dated files found with format YYYY-MM-DD_WB_coal_monthly.csv")
+
+    # Sort and pick the latest
+    latest_file, latest_date = max(files_with_dates, key=lambda x: x[1])
+
+    # Read the file
+    df = pd.read_csv(latest_file, parse_dates=["Date"])
+
+    print(f"📄 Loaded latest crude oil file: {os.path.basename(latest_file)}")
+
+    return df, latest_date
+
+
+coal_df, last_month = load_latest_coal_file()
+
+
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
-coal_df=pd.read_csv("data/WB_coal_selection.csv",parse_dates=["Date"])
-sa_coal_bands_df=pd.read_csv("data/WB_sa_coal_min_max_bands.csv")
+#coal_df=pd.read_csv("data/WB_coal_selection.csv",parse_dates=["Date"])
+sa_coal_bands_df=pd.read_csv("data/WB_au_coal_min_max_bands.csv")
 #✅--------------------------------------------------------------------------------------------
+
+
 
 sa_coal_df=coal_df[["Date", "Coal, South African **"]]
 

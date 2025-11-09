@@ -10,6 +10,8 @@ import plotly.express as px
 import pandas as pd
 from pathlib import Path
 from plotly.subplots import make_subplots
+import os
+import glob
 
 st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
@@ -46,17 +48,55 @@ palette_other = [
 ]
 
 
+def load_latest_ng_file(folder="data"):
+    # Pattern to match files like 2025-08-31_WB_crude_oils_monthly.csv
+    pattern = os.path.join(folder, "*_WB_natural_gas_monthly.csv")
+    
+    # Get list of matching files
+    files = glob.glob(pattern)
+
+    if not files:
+        raise FileNotFoundError("No crude oil CSV files found in the data folder.")
+
+    # Extract date part from each file name and find the latest
+    def extract_date(file_path):
+        basename = os.path.basename(file_path)
+        date_part = basename.split("_")[0]
+        return pd.to_datetime(date_part, format="%Y-%m-%d", errors="coerce")
+
+    files_with_dates = [(file, extract_date(file)) for file in files]
+    files_with_dates = [(file, date) for file, date in files_with_dates if pd.notnull(date)]
+
+    if not files_with_dates:
+        raise ValueError("No valid dated files found with format YYYY-MM-DD_WB_crude_oils_monthly.csv")
+
+    # Sort and pick the latest
+    latest_file, latest_date = max(files_with_dates, key=lambda x: x[1])
+
+    # Read the file
+    df = pd.read_csv(latest_file, parse_dates=["Date"])
+
+    print(f"📄 Loaded latest crude oil file: {os.path.basename(latest_file)}")
+
+    return df, latest_date
+
+
+ng_df, last_month = load_latest_ng_file()
+
+
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
 #ng_df=pd.read_csv("data/WB_natural_gas_selection.csv",parse_dates=["Date"])
 ttf_bands_df=pd.read_csv("data/WB_ttf_min_max_bands.csv")
 #✅--------------------------------------------------------------------------------------------
 
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
-last_month="2025-08-31"
-ng_df=pd.read_csv(f"data/{last_month}_WB_natural_gas_monthly.csv",parse_dates=["Date"])
+#last_month="2025-08-31"
+#ng_df=pd.read_csv(f"data/{last_month}_WB_natural_gas_monthly.csv",parse_dates=["Date"])
 #✅--------------------------------------------------------------------------------------------
 
-ng_df=ng_df.query("Date > '2008-01-01'")
+threshold = pd.Timestamp('2016-01-04')
+threshold_str=threshold .strftime("%Y-%m-%d")
+ng_df=ng_df.query("Date >@threshold")
 
 ttf_df=ng_df[["Date", "Natural gas, Europe"]]
 
@@ -65,8 +105,8 @@ st.markdown("""
             ### 🔥 Natural Gas price view 
             
             """)
-st.markdown(""" 
-            source: World Bank - monthly data (from 2008 onwards)
+st.markdown(f""" 
+            source: World Bank - monthly data (from {threshold_str} onwards)
                         """)
 
 #------------------------------------------------------------------------------
@@ -104,7 +144,9 @@ fig1.update_layout(
 
 st.plotly_chart(fig1, use_container_width=True, key="price_breakdown_chart")
 
-
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
 # Get last date
 last_date = ng_df["Date"].max()
 latest_row = ng_df[ng_df["Date"] == last_date].iloc[0]
@@ -147,7 +189,9 @@ gas_narrative = f"""
 
 st.markdown(gas_narrative, unsafe_allow_html=True)
 
-
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
 
 #------------------------------------------------------------------------------
 # 📈 FIG 2 - SPREAD
@@ -188,10 +232,13 @@ st.plotly_chart(fig3, use_container_width=True, key="price_breakdown_chartdfdfs"
 
 
 #------------------------------------------------------------------------------
-# 📈 FIG 2 - TTF
+# 📈 FIG 3 - TTF
 #------------------------------------------------------------------------------
 
+#-----------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
+
 st.markdown("""
             ### 📈 TTF YTD 
             """)

@@ -493,7 +493,7 @@ fig3.add_trace(
     go.Bar(
         x=df_filtered_2.index,
         y=df_filtered_2["variation"],
-        name="Variation (%)",
+        name="Δ [%]",
         marker_color=[
             "#F5B7B1" if v < 0 else "#A9DFBF"
             for v in df_filtered_2["variation"]

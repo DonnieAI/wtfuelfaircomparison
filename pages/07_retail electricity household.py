@@ -15,7 +15,6 @@ st.set_page_config(page_title="test", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
 
-
 #GRAPHICS----------------------------------------------
 
 palette_blue = [

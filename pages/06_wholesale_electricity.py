@@ -125,10 +125,9 @@ min_max_df.rename(columns={"min": "MIN", "max": "MAX"}, inplace=True)
 df = df_ember.merge(min_max_df, on="Date", how="left")
 
 #----------------------------------------------------
-st.markdown("---")  # horizontal line separator
-#-----------------------------------------------------------------------------------------------------
 
-st.title("🔎 Wholesale electricity prices")
+#-----------------------------------------------------------------------------------------------------
+st.title("⚡ Wholesale electricity prices")
 st.markdown("""
             ### 📊 Wholesales Electricity Prices
             
@@ -137,9 +136,8 @@ st.markdown("""
             source: EMEBER - daily data 
                         """)
 
-
 selected_country = st.selectbox(
-    "Select a Country or an Aggregate (Total World as default)",  # label
+    "Select a Country or an Aggregate (EU as default)",  # label
     options=country_selection,
     index=country_selection.index("EU")  # 👈 set default selection by index
 )
@@ -158,14 +156,13 @@ df_filtered = (
    
 )
 # **************************************************************************************
-
 # Create subplot: 2 rows, shared x-axis
 fig = make_subplots(
     rows=2,
     cols=1,
     shared_xaxes=True,
     vertical_spacing=0.12,
-    row_heights=[0.7, 0.3],
+    row_heights=[0.5, 0.5],
     subplot_titles=(
         f" Day-Ahead Prices Electricity[EUR/MWhe] - {selected_country}",
         "Weekly - Monthly - Yearly average  [EUR/MWhe]"
@@ -177,19 +174,19 @@ fig.add_trace(
     go.Scatter(
         x=df_filtered.index,
         y=df_filtered["Price (EUR/MWhe)"],
-        mode="lines+markers",
+        mode="lines",
         name=f"{selected_country}",
         line=dict(
             color=palette_blue[4],
             width=1,
             dash="solid"
         ),
-        marker=dict(
-            color=palette_blue[4],
-            size=3,
-            symbol="circle",
-            line=dict(width=1, color="white")
-        )
+       # marker=dict(
+        #    color=palette_blue[4],
+         #   size=3,
+          #  symbol="circle",
+           # line=dict(width=1, color="white")
+        #)
     ),
     row=1,
     col=1
@@ -230,19 +227,19 @@ fig.add_trace(
     go.Scatter(
         x=df_filtered.index,
         y=df_filtered["Weekly_Ave"],
-        mode="lines+markers",
+        mode="lines",
         name=f"{selected_country} | Weekly Avg",
         line=dict(
             color=palette_green[0],
             width=1.5,
             dash="dot"  # dotted to imply granularity
         ),
-        marker=dict(
-            color=palette_green[0],
-            size=4,
-            symbol="diamond",
-            line=dict(width=1, color="white")
-        ),
+      #  marker=dict(
+       #     color=palette_green[0],
+       #     size=4,
+       #     symbol="diamond",
+        #    line=dict(width=1, color="white")
+        #),
         opacity=0.8
     ),
     row=2,

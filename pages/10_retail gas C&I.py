@@ -15,13 +15,52 @@ st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
 
+#GRAPHICS----------------------------------------------
+
+palette_blue = [
+    "#A7D5F2",  # light blue
+    "#94CCE8",
+    "#81C3DD",
+    "#6FBBD3",
+    "#5DB2C8",
+    "#A9DEF9",  # baby blue
+]
+
+palette_green = [
+    "#6DC0B8",  # pastel teal
+    "#7DCFA8",
+    "#8DDC99",
+    "#9CE98A",
+    "#ABF67B",
+    "#C9F9D3",  # mint green
+    "#C4E17F",  # lime green
+]
+
+palette_other = [
+    "#FFD7BA",  # pastel orange
+    "#FFE29A",  # pastel yellow
+    "#FFB6C1",  # pastel pink
+    "#D7BDE2",  # pastel purple
+    "#F6C6EA",  # light rose
+    "#F7D794",  # peach
+    "#E4C1F9",  # lavender
+]
+
+
+custom_colors = {
+    "energy": "#A7D5F2",  
+    "taxes": "#6DC0B8",   # Powder blue
+    "vat": "#8DDC99"      # Muted salmon/peach  #66CDAA  #8EE5EE
+}
+
+
 #🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
 FOLDER="EUROSTAT"
 flow_id="nrg_pc_203"
 category="gas"
 sub_category="C&I"
-latest_semester="2024-S2"
-latest_month="2025-07-31"
+latest_semester="2025-S1"
+latest_month="2025-09-30"
 #🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
 
 
@@ -55,6 +94,33 @@ st.markdown(f"""
 st.markdown(""" 
             source: EUROSTAT - bi-annual data (from 2007 onwards)
                         """)
+
+#---------------------------------------------------------------------------------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#--------------------------------------------------------
+st.markdown("""
+     #### Gas - Commercial & Industrial (C&I)
+
+| Band               | Description            | Example Facility                        | Est. m³/year       |
+|--------------------|------------------------|-----------------------------------------|--------------------|
+| GJ_LT1000          | <1,000 GJ/year         | Small restaurant or office              | <26,850            |
+| GJ1000-9999        | 1,000–9,999 GJ/year    | Medium hotel, school                    | 26,850–268,400     |
+| GJ10000-99999      | 10,000–99,999 GJ/year  | Large bakery, brewery                   | 268,500–2,684,900  |
+| GJ100000-999999    | 100,000–999,999 GJ/year| Chemical plants                         | 2.685M–26.85M      |
+| GJ1000000-3999999  | 1M–3.99M GJ/year       | Steel mills, fertilizer plants          | 26.85M–107.3M      |
+| GJ_GE4000000       | ≥4M GJ/year            | Petrochemical complexes                 | 107.4M+            |
+| TOT_GJ             | Total industrial gas consumption | Aggregate                     | -                  |       
+           
+            
+            
+            
+            """)
+
+#---------------------------------------------------------------------------------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#--------------------------------------------------------
+
+
 # Reverse mapping for lookup
 label_to_code = {v: k for k, v in band_labels.items()}
 selected_label = st.selectbox(
@@ -325,20 +391,4 @@ st.divider()  # <--- Streamlit's built-in separator
 #---------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------
 
-st.markdown("""
-     #### Gas - Commercial & Industrial (C&I)
 
-| Band               | Description            | Example Facility                        | Est. m³/year       |
-|--------------------|------------------------|-----------------------------------------|--------------------|
-| GJ_LT1000          | <1,000 GJ/year         | Small restaurant or office              | <26,850            |
-| GJ1000-9999        | 1,000–9,999 GJ/year    | Medium hotel, school                    | 26,850–268,400     |
-| GJ10000-99999      | 10,000–99,999 GJ/year  | Large bakery, brewery                   | 268,500–2,684,900  |
-| GJ100000-999999    | 100,000–999,999 GJ/year| Chemical plants                         | 2.685M–26.85M      |
-| GJ1000000-3999999  | 1M–3.99M GJ/year       | Steel mills, fertilizer plants          | 26.85M–107.3M      |
-| GJ_GE4000000       | ≥4M GJ/year            | Petrochemical complexes                 | 107.4M+            |
-| TOT_GJ             | Total industrial gas consumption | Aggregate                     | -                  |       
-           
-            
-            
-            
-            """)

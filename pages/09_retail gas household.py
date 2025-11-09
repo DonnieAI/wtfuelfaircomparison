@@ -15,13 +15,52 @@ st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
 
+#GRAPHICS----------------------------------------------
+
+palette_blue = [
+    "#A7D5F2",  # light blue
+    "#94CCE8",
+    "#81C3DD",
+    "#6FBBD3",
+    "#5DB2C8",
+    "#A9DEF9",  # baby blue
+]
+
+palette_green = [
+    "#6DC0B8",  # pastel teal
+    "#7DCFA8",
+    "#8DDC99",
+    "#9CE98A",
+    "#ABF67B",
+    "#C9F9D3",  # mint green
+    "#C4E17F",  # lime green
+]
+
+palette_other = [
+    "#FFD7BA",  # pastel orange
+    "#FFE29A",  # pastel yellow
+    "#FFB6C1",  # pastel pink
+    "#D7BDE2",  # pastel purple
+    "#F6C6EA",  # light rose
+    "#F7D794",  # peach
+    "#E4C1F9",  # lavender
+]
+
+
+custom_colors = {
+    "energy": "#A7D5F2",  
+    "taxes": "#6DC0B8",   # Powder blue
+    "vat": "#8DDC99"      # Muted salmon/peach  #66CDAA  #8EE5EE
+}
+
+
 #🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
 FOLDER="EUROSTAT"
 flow_id="nrg_pc_202"
 category="gas"
 sub_category="householders"
-latest_semester="2024-S2"
-latest_month="2025-07-31"
+latest_semester="2025-S1"
+latest_month="2025-09-30"
 #🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
 
 
@@ -54,6 +93,26 @@ st.markdown(f"""
 st.markdown(""" 
             source: EUROSTAT - bi-annual data (from 2007 onwards)
                         """)
+
+#---------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#---------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
+st.markdown("""#### Gas - Household Conversion: 1 GJ ≈ 26.85 m³ of natural gas (based on EU average HHV)
+
+| Band       | Description              | Example Usage                             | Est. m³/year   |
+|------------|--------------------------|--------------------------------------------|----------------|
+| GJ_LT20    | <20 GJ/year              | Small apartment or single-person home      | <537           |
+| GJ20-199   | 20–199 GJ/year           | Average single-family home                 | 537–5,345      |
+| GJ_GE200   | 200+ GJ/year             | Large home or villa                        | 5,370+         |
+| TOT_GJ     | Total household gas consumption | Aggregate                            | -              |
+""")
+
+#---------------------------------------------------------------------------------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#--------------------------------------------------------------------------------------------
+
 # Reverse mapping for lookup
 label_to_code = {v: k for k, v in band_labels.items()}
 selected_label = st.selectbox(
@@ -93,17 +152,6 @@ geo_order = (
     .sort_values("total", ascending=False)["geo"]
     .tolist()
 )
-
-pastel_blue_green = [
-    "#A7D5F2", "#94CCE8", "#81C3DD", "#6FBBD3", "#5DB2C8",
-    "#6DC0B8", "#7DCFA8", "#8DDC99", "#9CE98A", "#ABF67B"
-]
-
-custom_colors = {
-    "energy": "#A7D5F2",  
-    "taxes": "#6DC0B8",   # Powder blue
-    "vat": "#8DDC99"      # Muted salmon/peach  #66CDAA  #8EE5EE
-}
 
 df_melted["price"] = df_melted["price"]*1000  # Multiply price by 1000 (e.g., from €/kWh to €/MWh)
 # 💹FIG1A💹---------------------------------------------------------------------
@@ -304,17 +352,4 @@ st.plotly_chart(fig2a, use_container_width=True,key="historical_chart")
 
 
 
-#---------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------
-st.divider()  # <--- Streamlit's built-in separator
-#---------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------
-st.markdown("""#### Gas - Household Conversion: 1 GJ ≈ 26.85 m³ of natural gas (based on EU average HHV)
 
-| Band       | Description              | Example Usage                             | Est. m³/year   |
-|------------|--------------------------|--------------------------------------------|----------------|
-| GJ_LT20    | <20 GJ/year              | Small apartment or single-person home      | <537           |
-| GJ20-199   | 20–199 GJ/year           | Average single-family home                 | 537–5,345      |
-| GJ_GE200   | 200+ GJ/year             | Large home or villa                        | 5,370+         |
-| TOT_GJ     | Total household gas consumption | Aggregate                            | -              |
-""")
