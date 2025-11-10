@@ -17,6 +17,12 @@ st.set_page_config(page_title="Energy Dashboard", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
 
+#🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+latest_date=pd.Timestamp("2025-11-03")
+latest_date_str=latest_date.strftime("%Y-%m-%d")
+#🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+
+
 #GRAPHICS----------------------------------------------
 palette_blue = [
     "#A7D5F2",  # light blue
@@ -69,7 +75,6 @@ threshold_str=threshold .strftime("%Y-%m-%d")
 
 
 
-
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
 # Extraction of oil product with tax
 files = list(Path("data").glob("*.parquet"))
@@ -101,7 +106,6 @@ df["Price_delta_forward"] = df["Price"].pct_change(periods=-1)
 #df["Price_delta"] = df["Price"].pct_change(periods=-1)
 df["Tax_impact"]=(df["Price"]-df["Price_wotax"])/df["Price"]*100
 
-
 df.dropna()
 category="Oil Products"
 subcategory="Oil Products"
@@ -109,7 +113,7 @@ subcategory="Oil Products"
 
 #✅-----------------------BRENT DATA EXTRACTION-----------------------------------------------------
 #last_month="2025-09-30"
-brent_raw_df=pd.read_csv(f"data/2025-10-31_EIA_brent_weekly.csv",parse_dates=["Date"])
+brent_raw_df=pd.read_csv(f"data/{latest_date_str}_EIA_brent_weekly.csv",parse_dates=["Date"])
 brent_df=(
             brent_raw_df
             .dropna()

@@ -10,6 +10,10 @@ from utils import apply_style_and_logo
 
 apply_style_and_logo()
 
+#🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+latest_date=pd.Timestamp("2025-11-03")
+latest_date_str=latest_date.strftime("%Y-%m-%d")
+#🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
 
 import streamlit as st
 import pandas as pd
@@ -88,7 +92,9 @@ def load_latest_ember_csv(directory="."):
 
     print(f"Loading: {latest_file}")  # Optional for debugging
     return pd.read_csv(os.path.join(directory, latest_file))
-df_ember = load_latest_ember_csv("data")  # or just "." for current folder
+#df_ember = load_latest_ember_csv("data")  # or just "." for current folder
+df_ember=pd.read_csv(f"data/{latest_date_str}_EMBER_daily_wholesale_el_prices.csv")
+
 country_selection=(
                     df_ember["Country"]
                    .unique()

@@ -17,6 +17,44 @@ st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
 
+palette_blue = [
+    "#A7D5F2",  # light blue
+    "#94CCE8",
+    "#81C3DD",
+    "#6FBBD3",
+    "#5DB2C8",
+    "#A9DEF9",  # baby blue
+]
+
+palette_green = [
+    "#6DC0B8",  # pastel teal
+    "#7DCFA8",
+    "#8DDC99",
+    "#9CE98A",
+    "#ABF67B",
+    "#C9F9D3",  # mint green
+    "#C4E17F",  # lime green
+]
+
+palette_other = [
+    "#FFD7BA",  # pastel orange
+    "#FFE29A",  # pastel yellow
+    "#FFB6C1",  # pastel pink
+    "#D7BDE2",  # pastel purple
+    "#F6C6EA",  # light rose
+    "#F7D794",  # peach
+    "#E4C1F9",  # lavender
+]
+
+
+custom_colors = {
+    "Coal, Australian": "#7FDBFF",  # blue
+    "Coal, South African **": "#77DD77",    # orange
+   # "Crude oil, Dubai": "#8EE5EE",    # green
+   # "Crude oil, WTI": "#d62728"       # red
+}
+
+
 
 def load_latest_coal_file(folder="data"):
     # Pattern to match files like 2025-08-31_WB_crude_oils_monthly.csv
@@ -53,34 +91,52 @@ def load_latest_coal_file(folder="data"):
 
 coal_df, last_month = load_latest_coal_file()
 
+threshold = pd.Timestamp('2016-01-04')
+threshold_str=threshold .strftime("%Y-%m-%d")
+coal_df=coal_df.query("Date >=@threshold")
 
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
 #coal_df=pd.read_csv("data/WB_coal_selection.csv",parse_dates=["Date"])
-sa_coal_bands_df=pd.read_csv("data/WB_au_coal_min_max_bands.csv")
+#sa_coal_bands_df=pd.read_csv("data/WB_au_coal_min_max_bands.csv")
 #✅--------------------------------------------------------------------------------------------
-
 
 
 sa_coal_df=coal_df[["Date", "Coal, South African **"]]
 
+def compute_monthly_min_max_bands(df, price_col):
+    """
+    Compute historical monthly min and max values across all years.
+    
+    Returns a DataFrame with:
+        Month | Min | Max
+    """
+    df = df.copy()
+    df["Date"] = pd.to_datetime(df["Date"])
+    df = df.dropna(subset=[price_col])
+    
+    df["Month"] = df["Date"].dt.month
+    monthly_stats = (
+        df.groupby("Month")[price_col]
+        .agg(Min="min", Max="max")
+        .reset_index()
+    )
+    return monthly_stats
+
+
+sa_coal_bands_df = compute_monthly_min_max_bands(df=sa_coal_df, price_col="Coal, South African **")
+
 st.title(" Coal prices ")
 st.markdown("""
-            ### ⚫ Oil crudes view 
+            ### ⚫ Coals view 
             
             """)
-st.markdown(""" 
-            source: World Bank - monthly data (from 2008 onwards)
+st.markdown(f""" 
+            source: World Bank - monthly data (from {threshold_str} onwards)
                         """)
 
 #------------------------------------------------------------------------------
 # 📈 FIG 1 - COAL TRENDS
 #------------------------------------------------------------------------------
-custom_colors = {
-    "Coal, Australian": "#7FDBFF",  # blue
-    "Coal, South African **": "#77DD77",    # orange
-   # "Crude oil, Dubai": "#8EE5EE",    # green
-   # "Crude oil, WTI": "#d62728"       # red
-}
 
 
 fig1 = px.line(
@@ -108,12 +164,57 @@ fig1.update_layout(
 
 st.plotly_chart(fig1, use_container_width=True, key="price_breakdown_chart")
 
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
+
+last_date = coal_df["Date"].max()
+latest_row = coal_df[coal_df["Date"] == last_date].iloc[0]
+last_3m = coal_df[coal_df["Date"] > last_date - pd.DateOffset(months=3)]
+
+# Latest values
+last_au = latest_row["Coal, Australian"]
+last_sa = latest_row["Coal, South African **"]
+
+# 3-month averages
+avg_au = last_3m["Coal, Australian"].mean()
+avg_sa = last_3m["Coal, South African **"].mean()
+
+# Spreads
+spread_au_sa = last_au - last_sa  # Note: currency/unit mismatch may apply
+
+
+
+# Narrative
+coal_narrative = f"""
+<div style="
+    border: 2px solid {palette_green[3]};
+    padding: 15px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+">
+
+<b>🌍 Latest Natural Gas Price Overview - {last_date.strftime('%B %Y')}</b><br><br>
+<ul>
+<li><span style="color:{palette_green[3]}; font-weight:bold;">Coal, Australian:</span> {last_au:.2f} USD/t (3-month avg: {avg_au:.2f})</li>
+<li><span style="color:{palette_green[3]}; font-weight:bold;">Coal, South African:</span> {last_sa:.2f} USD/t (3-month avg: {avg_sa:.2f})</li>
+
+<li><span style="color:{palette_green[3]}; font-weight:bold;">Australian - South African Spread:</span> {spread_au_sa:.2f} USD/t </li>
+</ul>
+</div>
+"""
+
+st.markdown(coal_narrative, unsafe_allow_html=True)
+
 
 #------------------------------------------------------------------------------
 # 📈 FIG 2 - South Africa Coal
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
+#------------------------------------------------------------------------------
 st.markdown("""
             ### 📈 South Africa Coal YTD 
             """)

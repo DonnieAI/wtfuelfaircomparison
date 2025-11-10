@@ -17,7 +17,6 @@ st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
 
-
 palette_blue = [
     "#A7D5F2",  # light blue
     "#94CCE8",
@@ -80,26 +79,38 @@ def load_latest_ng_file(folder="data"):
 
     return df, latest_date
 
-
 ng_df, last_month = load_latest_ng_file()
 
 
-#✅------------------------DATA EXTRACTION-----------------------------------------------------
-#ng_df=pd.read_csv("data/WB_natural_gas_selection.csv",parse_dates=["Date"])
-ttf_bands_df=pd.read_csv("data/WB_ttf_min_max_bands.csv")
-#✅--------------------------------------------------------------------------------------------
-
-#✅------------------------DATA EXTRACTION-----------------------------------------------------
-#last_month="2025-08-31"
-#ng_df=pd.read_csv(f"data/{last_month}_WB_natural_gas_monthly.csv",parse_dates=["Date"])
-#✅--------------------------------------------------------------------------------------------
-
 threshold = pd.Timestamp('2016-01-04')
 threshold_str=threshold .strftime("%Y-%m-%d")
-ng_df=ng_df.query("Date >@threshold")
+ng_df=ng_df.query("Date >=@threshold")
+
+
+def compute_monthly_min_max_bands(df, price_col):
+    """
+    Compute historical monthly min and max values across all years.
+    
+    Returns a DataFrame with:
+        Month | Min | Max
+    """
+    df = df.copy()
+    df["Date"] = pd.to_datetime(df["Date"])
+    df = df.dropna(subset=[price_col])
+    
+    df["Month"] = df["Date"].dt.month
+    monthly_stats = (
+        df.groupby("Month")[price_col]
+        .agg(Min="min", Max="max")
+        .reset_index()
+    )
+    return monthly_stats
 
 ttf_df=ng_df[["Date", "Natural gas, Europe"]]
+ttf_bands_df = compute_monthly_min_max_bands(df=ttf_df, price_col="Natural gas, Europe")
 
+
+#-------------------------------------------------------------------------------------------------
 st.title("Natural Gas")
 st.markdown("""
             ### 🔥 Natural Gas price view 
@@ -228,8 +239,6 @@ fig3.update_layout(
 )
 
 st.plotly_chart(fig3, use_container_width=True, key="price_breakdown_chartdfdfs")
-
-
 
 #------------------------------------------------------------------------------
 # 📈 FIG 3 - TTF

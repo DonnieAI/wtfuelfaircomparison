@@ -54,7 +54,6 @@ custom_colors = {
     "Crude oil, WTI": "#ABF67B"       # red
 }
 
-
 def load_latest_crude_file(folder="data"):
     # Pattern to match files like 2025-08-31_WB_crude_oils_monthly.csv
     pattern = os.path.join(folder, "*_WB_crude_oils_monthly.csv")
@@ -97,9 +96,9 @@ crudes_df, last_month = load_latest_crude_file()
 
 threshold = pd.Timestamp('2016-01-04')
 threshold_str=threshold .strftime("%Y-%m-%d")
-crudes_df=crudes_df.query("Date >@threshold")
+crudes_df=crudes_df.query("Date >=@threshold")
 
-def compute_monthly_min_max(df, price_col):
+def compute_monthly_min_max_bands(df, price_col):
     """
     Compute historical monthly min and max values across all years.
     
@@ -119,7 +118,7 @@ def compute_monthly_min_max(df, price_col):
     return monthly_stats
 
 brent_df=crudes_df[["Date", "Crude oil, Brent"]]
-brent_bands_df = compute_monthly_min_max(df=brent_df, price_col="Crude oil, Brent")
+brent_bands_df = compute_monthly_min_max_bands(df=brent_df, price_col="Crude oil, Brent")
 #-----------------------------------------------------------------------------------------------
 
 st.title(" Oil crudes ")

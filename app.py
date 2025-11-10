@@ -3,7 +3,6 @@ FAIR FUEL COMPARE
 app dedicated to STREAMLIT APPLICATION
 
 """
-
 # ───────────────────────────────────────────────────────────────
 #cdm
 #       projenv\Scripts\activate

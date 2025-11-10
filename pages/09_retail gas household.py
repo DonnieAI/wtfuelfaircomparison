@@ -60,7 +60,7 @@ flow_id="nrg_pc_202"
 category="gas"
 sub_category="householders"
 latest_semester="2025-S1"
-latest_month="2025-09-30"
+latest_month="2025-10-31"
 #🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
 
 
@@ -77,7 +77,6 @@ def create_band_label_dict(df, column_name):
 band_labels = create_band_label_dict(df, "nrg_cons")
 last_value = list(band_labels.values())[-1]
 print(band_labels)
-
 
 start_date=min(df["add_formal_time"])
 

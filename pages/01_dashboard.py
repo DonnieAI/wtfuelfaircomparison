@@ -9,7 +9,10 @@ from utils import apply_style_and_logo
 
 apply_style_and_logo()
 
-
+#🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+latest_date=pd.Timestamp("2025-11-03")
+latest_date_str=latest_date.strftime("%Y-%m-%d")
+#🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
 #GRAPHICS----------------------------------------------
 palette_blue = [
     "#A7D5F2",  # light blue
@@ -81,8 +84,6 @@ def extract_latest_value_and_variations(raw_df, column_name, delays):
     ]
     latest_date_str=latest_date.strftime("%Y-%m-%d")
     return latest_value, variations, latest_date_str
-
-
 
 # --- Flashcard component ---
 def flashcard_with_bar(label, value, unit, variations, color, latest_date,font_color="#000000"):
@@ -158,23 +159,39 @@ def flashcard_with_bar(label, value, unit, variations, color, latest_date,font_c
         st.plotly_chart(bar_fig, use_container_width=True, key=chart_key)
 
 
-st.title("🔎 Energy EU Proce Overview Dashboard")
+st.title("📅 Energy EU Weekly Price Overview Dashboard")
 
 st.markdown("""
-### 📊 Fuels and Commodity Energy-Based Comparison
+### 📊 Cross-Fuel Price Overview – Energy Commodities in the EU
 
-This dashboard provides a snapshot of key energy market indicators, including **oil (Brent)**, **natural gas (TTF)**, **coal**, and refined products across Europe. Prices are normalized based on **energy content** to enable meaningful cross-fuel comparisons.
+This page offers a concise snapshot of Europe’s key energy prices as of the latest **common cut-off date**, sourced from the **European Commission (DG Energy)** and complementary market platforms. It includes the most relevant spot or benchmark prices for:
 
-#### ⚠️ Please Note:
-- Data sources vary by fuel type and may not align to the same reference date.
-- Figures reflect the **latest available values**, with **weekly**, **monthly**, and **year-to-date (YTD)** changes to highlight market trends.
-- All prices are presented in their relevant units (€/MWh, $/bbl, etc.).
+- **Crude Oil (Brent)**  
+- **Natural Gas (TTF – Title Transfer Facility)**  
+- **Steam Coal (API2 – CIF ARA)**  
+- **Refined Oil Products**: Gasoline, Diesel, LPG  
+- **Wholesale Electricity (EU baseload index)**  
+- **Carbon (EU ETS – EUA price)**
 
-Use this page for a quick visual reference of market conditions. Detailed trends and time series charts are available in the following sections.
+To help you quickly interpret market dynamics, the dashboard also shows **percentage changes** over multiple timeframes:  
+**1 week**, **1 month**, **3 months**, **6 months**, and **1 year**.
+
+---
+
+#### ⚠️ Note:
+- All indicators are aligned to the **same market reference date** to allow apples-to-apples comparison.
+- Prices are expressed in standard energy or commodity units (€/MWh, $/bbl, etc.).
+- This page serves as a **general overview**; each energy vector has its own dedicated page within this multi-page app for in-depth time series, breakdowns, and policy-relevant insights.
+
+---
+
+📌 **Use this page for a strategic snapshot**. For detailed analytics and decarbonization impacts, navigate to the respective energy pages.
+
 """)
-st.markdown(""" 
-            source: Wavetransition - (data sources available in methodology page)
-                        """)
+
+st.markdown("""
+*Source: Wavetransition (See full data methodology and references in the 'Methodology' section.)*
+""")
 
 
 # Row 1: Commodities
@@ -187,8 +204,7 @@ st.markdown("""### Commodities
             """)
 
 #🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️--BRENT DATA EXTRACTION-🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️🛢️-
-brent_raw_df = pd.read_csv("data/2025-10-31_EIA_brent_weekly.csv", parse_dates=["Date"])
-
+brent_raw_df = pd.read_csv(f"data/{latest_date_str}_EIA_brent_daily.csv", parse_dates=["Date"])
 brent_latest_value, brent_variations, brent_latest_date = extract_latest_value_and_variations(
             brent_raw_df,
             column_name="Brent_Price",
@@ -198,7 +214,7 @@ brent_latest_value, brent_variations, brent_latest_date = extract_latest_value_a
 brent_card = {
     "label": "🛢️ Brent Price",
     "value": brent_latest_value,
-    "unit": "$/bbl",
+    "unit": "USD/bbl",
     "variations": {
         "Weekly": brent_variations[1],
         "Monthly": brent_variations[2],
@@ -212,14 +228,13 @@ brent_card = {
 
 
 #🔥🔥🔥🔥🔥🔥🔥🔥🔥 TTF 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-ttf_raw_df=pd.read_csv("data/2025-11-06_TTF_weekly.csv", parse_dates=["Date"])
+ttf_raw_df=pd.read_csv(f"data/{latest_date_str}_TTF_daily.csv", parse_dates=["Date"])
 
 ttf_latest_value, ttf_variations, ttf_latest_date = extract_latest_value_and_variations(
     ttf_raw_df,
     column_name="Close",
     delays=[0, 7, 30, 90, 180, 360]
 )
-
 
 ttf_card = {
     "label": "🔥 Dutch TTF",
@@ -236,22 +251,32 @@ ttf_card = {
     "latest_date": ttf_latest_date
 }
 
+
+#🪨🪨🪨🪨🪨🪨🪨🪨 COAL CIF ARA🪨🪨🪨🪨🪨🪨🪨🪨🪨
+coal_cif_ara_df=pd.read_csv(f"data/{latest_date_str}_coal_cif_ara_daily.csv", parse_dates=["Date"])
+
+coal_cif_ara_latest_value, coal_cif_ara_variations, coal_cif_ara_latest_date = extract_latest_value_and_variations(
+    coal_cif_ara_df,
+    column_name="Price",
+    delays=[0, 7, 30, 90, 180, 360]
+)
+
+
 coal_card = {
-    "label": "🪨 Coal Price",
-    "value":  100,
-    "unit": "EUR/t",
+    "label": "🪨 Coal Price (CIF ARA)",
+    "value":  coal_cif_ara_latest_value,
+    "unit": "USD/t",
    "variations": {
-        "Weekly": ttf_variations[1],
-        "Monthly": ttf_variations[2],
-        "3 Months" :ttf_variations[3],
-        "6-months": ttf_variations[4],
-        "YoY": ttf_variations[5]
+        "Weekly": coal_cif_ara_variations[1],
+        "Monthly": coal_cif_ara_variations[2],
+        "3 Months" :coal_cif_ara_variations[3],
+        "6-months": coal_cif_ara_variations[4],
+        "YoY": coal_cif_ara_variations[5]
     },
     "color": "#A9DEF9",  # baby blue
-    "latest_date": "DUMMY"
+    "latest_date": coal_cif_ara_latest_date
 }
 #flashcard_with_bar(**brent_card)
-
 
 commodities = [brent_card, ttf_card, coal_card]
 
@@ -385,16 +410,14 @@ for col2, card in zip(cols2, oil_products):
 st.markdown("---")  # horizontal line separator
 #----------------------------------------------------------------------
 
-
-
 def load_latest_ember_csv(directory="."):
     """
-    Loads the most recent CSV file in the directory matching the pattern: *_EMBER_wholesale_el_prices.csv
+    Loads the most recent CSV file in the directory matching the pattern: *_EMBER_daily_wholesale_el_prices.csv
     Assumes filename starts with YYYY-MM-DD.
     """
     files = [
         f for f in os.listdir(directory)
-        if "EMBER_wholesale_el_prices" in f and f.endswith(".csv")
+        if "EMBER_daily_wholesale_el_prices" in f and f.endswith(".csv")
     ]
 
     if not files:
@@ -426,16 +449,16 @@ eu_wholesale_el_price = (
     .query("Country == 'EU'")
     .assign(Date=lambda df: pd.to_datetime(df["Date"]))  # ensure Date is datetime
     .set_index("Date")  # required for resample to work
-    .resample("W")  # weekly average
-    .agg(Weekly_Ave=("Price (EUR/MWhe)", "mean"))
+    #.resample("W")  # weekly average
+    #.agg(Weekly_Ave=("Price (EUR/MWhe)", "mean"))
     .dropna()
     .reset_index()  # restore Date as column
     .sort_values("Date")
 )
 eu_wholesale_el_price_latest_value, eu_wholesale_el_price_variations, eu_wholesale_el_price_latest_date = extract_latest_value_and_variations(
             eu_wholesale_el_price,
-            column_name="Weekly_Ave",
-            delays=[0, 1, 4, 12, 24, 52]
+            column_name="Price (EUR/MWhe)",
+            delays=[0, 7, 30, 90, 180, 360]
 )
 
 st.markdown("""### EU data
@@ -457,11 +480,6 @@ eu_el_eprice_card = {
     "latest_date": eu_wholesale_el_price_latest_date
 }
 
-
-
-
-
-
 #---
 
 co2_price_df=pd.read_csv("data/prices_eu_ets_all.csv")  #daily
@@ -473,16 +491,16 @@ eua_price = (
     .dropna()
     .reset_index()  # restore Date as column
     .sort_values("Date")
-     .loc[:, ["Date", "price"]]
+    .loc[:, ["Date", "price"]]
+    .query("Date<=@latest_date")
+    
 )
-
 
 eua_price_latest_value, eua_price_price_variations, eua_price_price_latest_date = extract_latest_value_and_variations(
             eua_price,
             column_name="price",
             delays=[0, 7, 30, 90, 180, 360]
 )
-
 
 co2_price_card = {
     "label": "💨 CO2 price",
@@ -498,8 +516,6 @@ co2_price_card = {
     "color": palette_blue[3],  # baby blue
     "latest_date": eua_price_price_latest_date
 }
-
-
 
 eu_data=[eu_el_eprice_card,co2_price_card]
 
