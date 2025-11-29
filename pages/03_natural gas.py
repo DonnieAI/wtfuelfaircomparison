@@ -190,7 +190,7 @@ gas_narrative = f"""
 <b>🌍 Latest Natural Gas Price Overview - {last_date.strftime('%B %Y')}</b><br><br>
 <ul>
 <li><span style="color:{palette_green[3]}; font-weight:bold;">US Natural Gas (Henry Hub):</span> {last_us:.2f} USD/MMBtu (3-month avg: {avg_us:.2f})</li>
-<li><span style="color:{palette_green[3]}; font-weight:bold;">European Natural Gas (TTF):</span> {last_eu:.2f} EUR/MWh (3-month avg: {avg_eu:.2f})</li>
+<li><span style="color:{palette_green[3]}; font-weight:bold;">European Natural Gas (TTF):</span> {last_eu:.2f} USD/MMBtu (3-month avg: {avg_eu:.2f})</li>
 <li><span style="color:{palette_green[3]}; font-weight:bold;">LNG Japan :</span> {last_japan:.2f} USD/MMBtu (3-month avg: {avg_japan:.2f})</li>
 <li><span style="color:{palette_green[3]}; font-weight:bold;">EU–US Gas Spread:</span> {spread_eu_us:.2f} (Note: cross-currency/unit)</li>
 <li><span style="color:{palette_green[3]}; font-weight:bold;">EU–Japan LNG Spread:</span> {spread_eu_japan:.2f} (Note: cross-currency/unit)</li>
@@ -289,7 +289,7 @@ fig2.add_trace(go.Scatter(
 fig2.update_layout(
     title="TTF YTD on historical monthly Min/Max",
     xaxis=dict(title="Month", tickmode="array", tickvals=list(range(1, 13))),
-    yaxis_title="Price (USD permmbtu)",
+    yaxis_title="Price (USD/MMBtu)",
     template="plotly_white"
 )
 

@@ -55,7 +55,6 @@ custom_colors = {
 }
 
 
-
 def load_latest_coal_file(folder="data"):
     # Pattern to match files like 2025-08-31_WB_crude_oils_monthly.csv
     pattern = os.path.join(folder, "*_WB_coal_monthly.csv")
