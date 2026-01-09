@@ -10,7 +10,7 @@ from utils import apply_style_and_logo
 apply_style_and_logo()
 
 #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
-latest_date=pd.Timestamp("2025-12-01")
+latest_date=pd.Timestamp("2026-01-05")
 latest_date_str=latest_date.strftime("%Y-%m-%d")
 #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
 #GRAPHICS----------------------------------------------
@@ -93,7 +93,12 @@ def flashcard_with_bar(label, value, unit, variations, color, latest_date,font_c
     # Create bar chart
     variation_labels = list(variations.keys())
     variation_values = list(variations.values())
-    bar_colors = ["#E74C3C" if v < 0 else "#27AE60" for v in variation_values]
+    bar_colors = [
+    "#E74C3C" if (v is not None and v < 0)
+    else "#27AE60" if (v is not None)
+    else "#BDC3C7"  # neutral gray for missing values
+    for v in variation_values
+]
 
     bar_fig = go.Figure(
         data=[
@@ -481,8 +486,8 @@ eu_el_eprice_card = {
 }
 
 #---
-
-co2_price_df=pd.read_csv("data/prices_eu_ets_all.csv")  #daily
+co2_price_df=pd.read_csv(f"data/{latest_date_str}_prices_eu_ets_all.csv", parse_dates=["date"])
+#co2_price_df=pd.read_csv("data/prices_eu_ets_all.csv")  #daily
 #co2_price_df["date"] = pd.to_datetime(co2_price_df["date"], dayfirst=True)
 eua_price = (
     co2_price_df
@@ -514,7 +519,7 @@ co2_price_card = {
         "YoY": eua_price_price_variations[5]
     },
     "color": palette_blue[3],  # baby blue
-    "latest_date": eua_price_price_latest_date
+    "latest_date": latest_date.strftime("%Y-%m-%d")
 }
 
 eu_data=[eu_el_eprice_card,co2_price_card]

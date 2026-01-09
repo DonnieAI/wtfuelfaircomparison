@@ -5,6 +5,8 @@ import plotly.express as px
 from pathlib import Path
 from plotly.subplots import make_subplots
 from datetime import datetime
+import os
+import glob
 
 #https://docs.streamlit.io/develop/api-reference/charts/st.pydeck_chart
 #https://docs.mapbox.com/api/maps/styles/
@@ -45,9 +47,54 @@ palette_other = [
     "#E4C1F9",  # lavender
 ]
 
+
 #-----------------------------------------------------------------------------------------------
-#-----------------------------------------------------------------------------------------------
-co2_price_df=pd.read_csv("data/prices_eu_ets_all.csv")
+def load_latest_eua_co2_file(folder="data"):
+    # Pattern to match files like 2025-08-31_Wprices_eu_ets_all.csv
+    pattern = os.path.join(folder, "*_prices_eu_ets_all.csv")
+    
+    # Get list of matching files
+    files = glob.glob(pattern)
+
+    if not files:
+        raise FileNotFoundError("No EUA CO2 price CSV files found in the data folder.")
+
+    # Extract date part from each file name and find the latest
+    def extract_date(file_path):
+        basename = os.path.basename(file_path)
+        date_part = basename.split("_")[0]
+        return pd.to_datetime(date_part, format="%Y-%m-%d", errors="coerce")
+
+    files_with_dates = [(file, extract_date(file)) for file in files]
+    files_with_dates = [(file, date) for file, date in files_with_dates if pd.notnull(date)]
+
+    if not files_with_dates:
+        raise ValueError("No valid dated files found with format YYYY-MM-DD_prices_eu_ets_all.csv")
+
+    # Sort and pick the latest
+    latest_file, latest_date = max(files_with_dates, key=lambda x: x[1])
+
+    # Read the file
+    df = pd.read_csv(latest_file, parse_dates=["date"])
+
+    print(f"📄 Loaded latest EUA CO2 price: {os.path.basename(latest_file)}")
+
+    return df, latest_date
+
+
+co2_price_df, last_month = load_latest_eua_co2_file()
+
+#✅------------------------DATA EXTRACTION-----------------------------------------------------
+
+#✅--------------------------------------------------------------------------------------------
+
+threshold = pd.Timestamp('2016-01-04')
+threshold_str=threshold .strftime("%Y-%m-%d")
+co2_price_df=co2_price_df.query("date >=@threshold")
+
+
+
+#co2_price_df=pd.read_csv("data/prices_eu_ets_all.csv")
 co2_price_df["date"] = pd.to_datetime(co2_price_df["date"], dayfirst=True)
 # Extract the year from the date
 co2_price_df["year"] = co2_price_df["date"].dt.year

@@ -4,6 +4,12 @@ import pandas as pd
 from pathlib import Path
 import os
 from datetime import datetime
+import streamlit as st
+import plotly.graph_objects as go
+import plotly.express as px 
+from pathlib import Path
+from plotly.subplots import make_subplots
+import numpy as np
 
 st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
@@ -15,18 +21,7 @@ latest_date=pd.Timestamp("2025-11-03")
 latest_date_str=latest_date.strftime("%Y-%m-%d")
 #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
 
-import streamlit as st
-import pandas as pd
-import streamlit as st
-import plotly.graph_objects as go
-import plotly.express as px 
-from pathlib import Path
-from plotly.subplots import make_subplots
-import numpy as np
 
-st.set_page_config(page_title="Dashboard", layout="wide")
-from utils import apply_style_and_logo
-apply_style_and_logo()
 
 
 palette_blue = [
