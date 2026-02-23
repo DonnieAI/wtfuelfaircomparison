@@ -10,8 +10,10 @@ from utils import apply_style_and_logo
 apply_style_and_logo()
 
 #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
-latest_date=pd.Timestamp("2026-01-19")
+latest_date=pd.Timestamp("2026-02-16")
+coal_last_data=pd.Timestamp("2026-01-26")
 latest_date_str=latest_date.strftime("%Y-%m-%d")
+coal_last_data_str=coal_last_data.strftime("%Y-%m-%d")
 #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
 #GRAPHICS----------------------------------------------
 palette_blue = [
@@ -258,7 +260,7 @@ ttf_card = {
 
 
 #🪨🪨🪨🪨🪨🪨🪨🪨 COAL CIF ARA🪨🪨🪨🪨🪨🪨🪨🪨🪨
-coal_cif_ara_df=pd.read_csv(f"data/{latest_date_str}_coal_cif_ara_daily.csv", parse_dates=["Date"])
+coal_cif_ara_df=pd.read_csv(f"data/{coal_last_data_str}_coal_cif_ara_daily.csv", parse_dates=["Date"])
 
 coal_cif_ara_latest_value, coal_cif_ara_variations, coal_cif_ara_latest_date = extract_latest_value_and_variations(
     coal_cif_ara_df,
