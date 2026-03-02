@@ -10,7 +10,7 @@ from utils import apply_style_and_logo
 apply_style_and_logo()
 
 #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
-latest_date=pd.Timestamp("2026-02-16")
+latest_date=pd.Timestamp("2026-02-23")
 coal_last_data=pd.Timestamp("2026-01-26")
 latest_date_str=latest_date.strftime("%Y-%m-%d")
 coal_last_data_str=coal_last_data.strftime("%Y-%m-%d")
