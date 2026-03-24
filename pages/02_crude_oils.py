@@ -94,7 +94,7 @@ crudes_df, last_month = load_latest_crude_file()
 #crudes_df=pd.read_csv(f"data/{last_month}_WB_crude_oils_monthly.csv",parse_dates=["Date"])
 #✅--------------------------------------------------------------------------------------------
 
-threshold = pd.Timestamp('2016-01-04')
+threshold = pd.Timestamp('2008-01-01')
 threshold_str=threshold .strftime("%Y-%m-%d")
 crudes_df=crudes_df.query("Date >=@threshold")
 
