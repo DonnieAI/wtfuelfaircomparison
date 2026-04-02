@@ -17,7 +17,7 @@ from utils import apply_style_and_logo
 apply_style_and_logo()
 
 #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
-latest_date=pd.Timestamp("2026-01-19")
+latest_date=pd.Timestamp("2026-03-16")
 latest_date_str=latest_date.strftime("%Y-%m-%d")
 #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
 
