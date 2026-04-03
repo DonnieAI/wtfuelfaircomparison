@@ -178,7 +178,7 @@ This page offers a concise snapshot of Europe’s key energy prices as of the la
 - **Steam Coal (API2 – CIF ARA)**  
 - **Refined Oil Products**: Gasoline, Diesel, LPG  
 - **Wholesale Electricity (EU baseload index)**  
-- **Carbon (EU ETS – EUA price)**
+- **CO2 Carbon Price (EU ETS – EUA price)**
 
 To help you quickly interpret market dynamics, the dashboard also shows **percentage changes** over multiple timeframes:  
 **1 week**, **1 month**, **3 months**, **6 months**, and **1 year**.
@@ -206,7 +206,7 @@ st.markdown("""
 #----------------------------------------------------------------------
 st.markdown("---")  # horizontal line separator
 #----------------------------------------------------------------------
-st.markdown("""### Commodities
+st.markdown("""### Commodities (EU)
             
             """)
 
@@ -355,7 +355,7 @@ GPL_latest_value, GPL_variations, GPL_latest_date = extract_latest_value_and_var
             column_name="Price",
             delays=[0, 1, 4, 12, 24, 52]
 )
-st.markdown("""### Oil products
+st.markdown("""### Oil products (EU)
             
             """)
 
@@ -468,7 +468,7 @@ eu_wholesale_el_price_latest_value, eu_wholesale_el_price_variations, eu_wholesa
             delays=[0, 7, 30, 90, 180, 360]
 )
 
-st.markdown("""### EU data
+st.markdown("""### Power (EU)
             
             """)
 

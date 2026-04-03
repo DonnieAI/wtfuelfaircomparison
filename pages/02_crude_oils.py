@@ -54,6 +54,13 @@ custom_colors = {
     "Crude oil, WTI": "#ABF67B"       # red
 }
 
+series_colors = {
+    "Crude oil, average": "#5DB2C8",  # stronger blue-teal
+    "Crude oil, Brent": "#6DC0B8",    # teal
+    "Crude oil, Dubai": "#FFD7BA",    # pastel orange
+    "Crude oil, WTI": "#D7BDE2"       # pastel purple
+}
+
 def load_latest_crude_file(folder="data"):
     # Pattern to match files like 2025-08-31_WB_crude_oils_monthly.csv
     pattern = os.path.join(folder, "*_WB_crude_oils_monthly.csv")
@@ -85,7 +92,6 @@ def load_latest_crude_file(folder="data"):
     print(f"📄 Loaded latest crude oil file: {os.path.basename(latest_file)}")
 
     return df, latest_date
-
 
 crudes_df, last_month = load_latest_crude_file()
 
@@ -121,41 +127,54 @@ brent_df=crudes_df[["Date", "Crude oil, Brent"]]
 brent_bands_df = compute_monthly_min_max_bands(df=brent_df, price_col="Crude oil, Brent")
 #-----------------------------------------------------------------------------------------------
 
-st.title(" Oil crudes ")
-st.markdown("""
-            ### 🛢️ Oil crudes view 
-            
-            """)
-st.markdown(f""" 
-            source: World Bank - monthly data (from {threshold_str})
-                        """)
+st.title("🛢️ Crude oil prices")
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
+
+st.markdown("### 📊 Monthly view of major crude oil indicators.")
+st.caption(f"Source: World Bank monthly data • Updated from {threshold_str}")
 
 #------------------------------------------------------------------------------
 # 📈 FIG 1 - CRUDES TRENDS
 #------------------------------------------------------------------------------
 
+fig1 = go.Figure()
 
-fig1 = px.line(
-    crudes_df,
-    x="Date",
-    y=[
-        "Crude oil, average",
-        "Crude oil, Brent",
-        "Crude oil, Dubai",
-        "Crude oil, WTI"
-    ],
-    title="Crude Oil Prices Over Time",
-    color_discrete_map=custom_colors
-)
+for col in [
+    "Crude oil, average",
+    "Crude oil, Brent",
+    "Crude oil, Dubai",
+    "Crude oil, WTI"
+]:
+    fig1.add_trace(
+        go.Scatter(
+            x=crudes_df["Date"],
+            y=crudes_df[col],
+            mode="lines",
+            name=col.replace("Crude oil, ", ""),
+            line=dict(
+                color=series_colors[col],
+                width=3
+            ),
+            hovertemplate=(
+                "<b>%{fullData.name}</b><br>"
+                "Date: %{x|%b %Y}<br>"
+                "Price: %{y:.2f} USD/bbl"
+                "<extra></extra>"
+            )
+        )
+    )
 
-# Update figure layout
 fig1.update_layout(
-    title="Crude Oil Prices (Monthly , source Worldbank)",
+    title="Crude Oil Prices",
     xaxis_title="Date",
     yaxis_title="Price (USD per barrel)",
-    legend_title="Oil Type",
+    legend_title="Benchmark",
     template="plotly_white",
-    font=dict(size=14)
+    font=dict(size=14),
+    hovermode="x unified",
+    margin=dict(t=60, l=40, r=20, b=40)
 )
 
 st.plotly_chart(fig1, use_container_width=True, key="price_breakdown_chart")
@@ -164,141 +183,220 @@ st.plotly_chart(fig1, use_container_width=True, key="price_breakdown_chart")
 #-----------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
 #-----------------------------------------------------
-# Get last date
-last_date = crudes_df["Date"].max()
-latest_row = crudes_df[crudes_df["Date"] == last_date].iloc[0]
-last_3m = crudes_df[crudes_df["Date"] > last_date - pd.DateOffset(months=3)]
 
-# Latest values
-last_Brent = latest_row["Crude oil, Brent"]
-last_Dubai = latest_row["Crude oil, Dubai"]
-last_WTI = latest_row["Crude oil, WTI"]
-
-# 3-month averages
-avg_Brent = last_3m["Crude oil, Brent"].mean()
-avg_Dubai = last_3m["Crude oil, Dubai"].mean()
-avg_WTI = last_3m["Crude oil, WTI"].mean()
-
-# Spreads
-spread_Brent_Dubai = last_Brent - last_Dubai  # Note: currency/unit mismatch may apply
-spread_Brent_WTI = last_Brent-last_WTI
-# Narrative
-gas_narrative = f"""
-<div style="
-    border: 2px solid {palette_green[3]};
-    padding: 15px;
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.05);
-    color: white;
-">
-
-<b>🌍 Latest Natural Gas Price Overview - {last_date.strftime('%B %Y')}</b><br><br>
-<ul>
-<li><span style="color:{palette_green[3]}; font-weight:bold;">Brent:</span> {last_Brent:.2f} USD/bbl(3-month avg: {avg_Brent:.2f})</li>
-<li><span style="color:{palette_green[3]}; font-weight:bold;">Dubai:</span> {last_Dubai:.2f} USD/bbl (3-month avg: {avg_Dubai:.2f})</li>
-<li><span style="color:{palette_green[3]}; font-weight:bold;">WTI :</span> {last_WTI:.2f} USD/bbl (3-month avg: {avg_WTI:.2f})</li>
-<li><span style="color:{palette_green[3]}; font-weight:bold;">Brent-Dubai Gas Spread:</span> {spread_Brent_Dubai:.2f} (Note: cross-currency/unit)</li>
-<li><span style="color:{palette_green[3]}; font-weight:bold;">Brent-WTI Spread:</span> {spread_Brent_WTI:.2f} (Note: cross-currency/unit)</li>
-</ul>
-</div>
-"""
-
-st.markdown(gas_narrative, unsafe_allow_html=True)
-
-#-----------------------------------------------------
-st.divider()  # <--- Streamlit's built-in separator
-#-----------------------------------------------------
-
-
-#-----------------------------------------------------
-st.divider()  # <--- Streamlit's built-in separator
-#-----------------------------------------------------
-
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # 📈 FIG 2 - SPREAD
-#------------------------------------------------------------------------------
-crudes_df["SPREAD BRENT-DUBAI"]=crudes_df["Crude oil, Brent"] - crudes_df["Crude oil, Dubai"]
-crudes_df["SPREAD BRENT-WTI"]=crudes_df["Crude oil, Brent"]-crudes_df["Crude oil, WTI"] 
+# ------------------------------------------------------------------------------
+crudes_df["SPREAD BRENT-DUBAI"] = crudes_df["Crude oil, Brent"] - crudes_df["Crude oil, Dubai"]
+crudes_df["SPREAD BRENT-WTI"] = crudes_df["Crude oil, Brent"] - crudes_df["Crude oil, WTI"]
 
-spread_colors={
-    "SPREAD BRENT-DUBAI" : palette_green[3],
-    "SPREAD BRENT-WTI" : palette_blue[3]
-    
+spread_colors = {
+    "SPREAD BRENT-DUBAI": "#7DCFA8",  # green-teal
+    "SPREAD BRENT-WTI": "#6FBBD3"     # medium blue
 }
-
-fig3 = px.line(
-    crudes_df,
-    x="Date",
-    y=[
-        "SPREAD BRENT-DUBAI",
-        "SPREAD BRENT-WTI",
-     
-    ],
-    title="SPREAD",
-    color_discrete_map=spread_colors
-)
-
-# Update figure layout
-fig3.update_layout(
-    title="Crudes Oils (Monthly , source Worldbank)",
-    xaxis_title="Date",
-    yaxis_title="Price (USD per barrel)",
-    legend_title="Crude Spreads" ,
-    template="plotly_white",
-    font=dict(size=14)
-)
-
-st.plotly_chart(fig3, use_container_width=True, key="price_breakdown_chartdfdfs")
-
-
-#------------------------------------------------------------------------------
-# 📈 FIG 2 - BRENT
-#------------------------------------------------------------------------------
-
-st.divider()  # <--- Streamlit's built-in separator
-st.markdown("""
-            ### 📈 Brent YTD 
-            """)
-st.markdown(""" 
-            source: World Bank - monthly data
-                        """)
 
 fig2 = go.Figure()
 
-# Min line
-fig2.add_trace(go.Scatter(
-    x=brent_bands_df["Month"], 
-    y=brent_bands_df["Min"],
-    mode="lines",
-    line=dict(color="lightgrey"),
-    name="Historical Min"
-))
-
-# Max line with shading
-fig2.add_trace(go.Scatter(
-    x=brent_bands_df["Month"], 
-    y=brent_bands_df["Max"],
-    mode="lines",
-    line=dict(color="lightgrey"),
-    fill="tonexty",  # Fill area between this and previous trace
-    fillcolor="rgba(200,200,200,0.3)",
-    name="Historical Max"
-))
-
-fig2.add_trace(go.Scatter(
-    x=brent_df.query("Date >= '2025-01-01'")["Date"].dt.month,
-    y=brent_df.query("Date >= '2025-01-01'")["Crude oil, Brent"],
-    mode="lines",
-    line=dict(color="#77DD77", width=2),
-    name="YTD Brent"
-))
-
-
-fig2.update_layout(
-    title="Brent YTD on historical monthly Min/Max",
-    xaxis=dict(title="Month", tickmode="array", tickvals=list(range(1, 13))),
-    yaxis_title="Price (USD per barrel)",
-    template="plotly_white"
+fig2.add_trace(
+    go.Scatter(
+        x=crudes_df["Date"],
+        y=crudes_df["SPREAD BRENT-DUBAI"],
+        mode="lines",
+        name="Brent - Dubai",
+        line=dict(color=spread_colors["SPREAD BRENT-DUBAI"], width=3),
+        hovertemplate=(
+            "<b>Brent - Dubai</b><br>"
+            "Date: %{x|%b %Y}<br>"
+            "Spread: %{y:.2f} USD/bbl"
+            "<extra></extra>"
+        )
+    )
 )
 
-st.plotly_chart(fig2, use_container_width=True, key="price_band")
+fig2.add_trace(
+    go.Scatter(
+        x=crudes_df["Date"],
+        y=crudes_df["SPREAD BRENT-WTI"],
+        mode="lines",
+        name="Brent - WTI",
+        line=dict(color=spread_colors["SPREAD BRENT-WTI"], width=3),
+        hovertemplate=(
+            "<b>Brent - WTI</b><br>"
+            "Date: %{x|%b %Y}<br>"
+            "Spread: %{y:.2f} USD/bbl"
+            "<extra></extra>"
+        )
+    )
+)
+
+fig2.update_layout(
+    title="Crude Oil Price Spreads",
+    xaxis_title="Date",
+    yaxis_title="Spread (USD per barrel)",
+    legend_title="Spread",
+    template="plotly_white",
+    font=dict(size=14),
+    hovermode="x unified",
+    margin=dict(t=60, l=40, r=20, b=40)
+)
+
+fig2.add_hline(
+    y=0,
+    line_width=1.2,
+    line_dash="dash",
+    line_color="gray"
+)
+
+st.plotly_chart(fig2, use_container_width=True, key="crude_spread_chart")
+
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
+# ------------------------------------------------------------------------------
+# 📈 BOX NARRATIVE
+# ------------------------------------------------------------------------------
+import pandas as pd
+
+# Latest snapshot
+last_date = crudes_df["Date"].max()
+latest_row = crudes_df.loc[crudes_df["Date"] == last_date].iloc[0]
+
+# Last 3 months window including latest month
+last_3m = crudes_df.loc[
+    crudes_df["Date"] >= (last_date - pd.DateOffset(months=2))
+].copy()
+
+# Latest values
+last_brent = latest_row["Crude oil, Brent"]
+last_dubai = latest_row["Crude oil, Dubai"]
+last_wti = latest_row["Crude oil, WTI"]
+
+# 3-month averages
+avg_brent = last_3m["Crude oil, Brent"].mean()
+avg_dubai = last_3m["Crude oil, Dubai"].mean()
+avg_wti = last_3m["Crude oil, WTI"].mean()
+
+# Spreads
+spread_brent_dubai = last_brent - last_dubai
+spread_brent_wti = last_brent - last_wti
+
+# Direction helpers
+def vs_avg(latest, avg):
+    diff = latest - avg
+    if diff > 0:
+        return f"{diff:.2f} above"
+    elif diff < 0:
+        return f"{abs(diff):.2f} below"
+    return "in line with"
+
+oil_narrative = f"""
+<div style="border:1.5px solid {palette_blue[3]}; padding:16px 18px; border-radius:12px; background-color:rgba(255,255,255,0.04); color:white; line-height:1.6;">
+    <div style="font-size:1.05rem; font-weight:700; margin-bottom:10px;">
+        🛢️ Latest crude oil snapshot — {last_date.strftime('%B %Y')}
+    </div>
+    <div><b>Brent</b>: {last_brent:.2f} USD/bbl, {vs_avg(last_brent, avg_brent)} its 3-month average ({avg_brent:.2f})</div>
+    <div><b>Dubai</b>: {last_dubai:.2f} USD/bbl, {vs_avg(last_dubai, avg_dubai)} its 3-month average ({avg_dubai:.2f})</div>
+    <div><b>WTI</b>: {last_wti:.2f} USD/bbl, {vs_avg(last_wti, avg_wti)} its 3-month average ({avg_wti:.2f})</div>
+    <div><b>Brent-Dubai spread</b>: {spread_brent_dubai:.2f} USD/bbl</div>
+    <div><b>Brent-WTI spread</b>: {spread_brent_wti:.2f} USD/bbl</div>
+</div>
+"""
+
+st.markdown(oil_narrative, unsafe_allow_html=True)
+
+
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+# 📈 FIG 3 - FOCUS BRENT YTD
+# ------------------------------------------------------------------------------
+
+latest_date = brent_df["Date"].max()
+latest_year = latest_date.year
+
+brent_ytd = brent_df.loc[brent_df["Date"].dt.year == latest_year].copy()
+brent_ytd["MonthNum"] = brent_ytd["Date"].dt.month
+
+hist_line_color = palette_blue[2]      # soft blue
+hist_fill_color = "rgba(129, 195, 221, 0.18)"
+ytd_line_color = palette_green[0]      # teal
+ytd_marker_color = palette_other[0]    # peach
+
+fig3 = go.Figure()
+
+# Historical min
+fig3.add_trace(
+    go.Scatter(
+        x=brent_bands_df["Month"],
+        y=brent_bands_df["Min"],
+        mode="lines",
+        line=dict(color=hist_line_color, width=2),
+        name="Historical min",
+        hovertemplate=(
+            "<b>Historical min</b><br>"
+            "Month: %{x}<br>"
+            "Price: %{y:.2f} USD/bbl"
+            "<extra></extra>"
+        )
+    )
+)
+
+# Historical max + shaded band
+fig3.add_trace(
+    go.Scatter(
+        x=brent_bands_df["Month"],
+        y=brent_bands_df["Max"],
+        mode="lines",
+        line=dict(color=hist_line_color, width=2),
+        fill="tonexty",
+        fillcolor=hist_fill_color,
+        name="Historical max",
+        hovertemplate=(
+            "<b>Historical max</b><br>"
+            "Month: %{x}<br>"
+            "Price: %{y:.2f} USD/bbl"
+            "<extra></extra>"
+        )
+    )
+)
+
+# YTD Brent
+fig3.add_trace(
+    go.Scatter(
+        x=brent_ytd["MonthNum"],
+        y=brent_ytd["Crude oil, Brent"],
+        mode="lines+markers",
+        line=dict(color=ytd_line_color, width=3.5),
+        marker=dict(size=8, color=ytd_marker_color),
+        name=f"{latest_year} YTD Brent",
+        hovertemplate=(
+            f"<b>{latest_year} YTD Brent</b><br>"
+            "Month: %{x}<br>"
+            "Price: %{y:.2f} USD/bbl"
+            "<extra></extra>"
+        )
+    )
+)
+
+fig3.update_layout(
+    title=f"Brent YTD versus historical monthly range ({latest_year})",
+    xaxis=dict(
+        title="Month",
+        tickmode="array",
+        tickvals=list(range(1, 13)),
+        ticktext=["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    ),
+    yaxis_title="Price (USD per barrel)",
+    legend_title="Series",
+    template="plotly_white",
+    font=dict(size=14),
+    hovermode="x unified",
+    margin=dict(t=60, l=40, r=20, b=40)
+)
+
+st.plotly_chart(fig3, use_container_width=True, key="price_band")
+
