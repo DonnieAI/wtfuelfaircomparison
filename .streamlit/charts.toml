@@ -1,0 +1,34 @@
+[line.line1]
+width = 3.5
+dash = "solid"
+shape = "linear"
+
+[line.line2]
+width = 3
+dash = "dash"
+shape = "linear"
+
+[line.line3]
+width = 2.5
+dash = "dot"
+shape = "linear"
+
+[line.line4]
+width = 2.5
+dash = "dashdot"
+shape = "linear"
+
+[marker.primary]
+size = 8
+
+[layout]
+template = "plotly_white"
+font_size = 14
+hovermode = "x unified"
+margin_t = 60
+margin_l = 40
+margin_r = 20
+margin_b = 40
+
+[fill]
+historical_alpha = 0.18

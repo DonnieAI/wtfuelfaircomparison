@@ -1,0 +1,52 @@
+PALETTE_BLUE = [
+    "#A7D5F2",
+    "#94CCE8",
+    "#81C3DD",
+    "#6FBBD3",
+    "#5DB2C8",
+    "#A9DEF9",
+]
+
+PALETTE_GREEN = [
+    "#6DC0B8",
+    "#7DCFA8",
+    "#8DDC99",
+    "#9CE98A",
+    "#ABF67B",
+    "#C9F9D3",
+    "#C4E17F",
+]
+
+PALETTE_OTHER = [
+    "#FFD7BA",
+    "#FFE29A",
+    "#FFB6C1",
+    "#D7BDE2",
+    "#F6C6EA",
+    "#F7D794",
+    "#E4C1F9",
+]
+
+PALETTE_VISIBLE = [
+    "#9CCFE8",
+    "#B7E4C7",
+    "#F9D8A7",
+    "#D9C2F0",
+    "#F6C1D1",
+    "#B8E3E9",
+]
+
+PALETTE_TOP = [
+ "#FFB6C1",
+ "#FFB6C1",
+ "#FFB6C1",
+ "#FFB6C1",
+ "#FFB6C1",
+ "#FFB6C1",
+ "#FFB6C1",
+ "#FFB6C1",
+ "#F5B7B1",
+ "#A9DFBF",
+
+
+]

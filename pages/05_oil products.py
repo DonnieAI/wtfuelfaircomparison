@@ -18,45 +18,41 @@ from utils import apply_style_and_logo
 apply_style_and_logo()
 
 #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
-latest_date=pd.Timestamp("2025-11-03")
+latest_date=pd.Timestamp("2026-03-30")
 latest_date_str=latest_date.strftime("%Y-%m-%d")
 #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
 
 
-#GRAPHICS----------------------------------------------
-palette_blue = [
-    "#A7D5F2",  # light blue
-    "#94CCE8",
-    "#81C3DD",
-    "#6FBBD3",
-    "#5DB2C8",
-    "#A9DEF9",  # baby blue
-]
+#-----------------------------------------------------
+#---------GRAPHICS------------------------------------
+#-----------------------------------------------------
 
-palette_green = [
-    "#6DC0B8",  # pastel teal
-    "#7DCFA8",
-    "#8DDC99",
-    "#9CE98A",
-    "#ABF67B",
-    "#C9F9D3",  # mint green
-    "#C4E17F",  # lime green
-]
+import tomllib
 
-palette_other = [
-    "#FFD7BA",  # pastel orange
-    "#FFE29A",  # pastel yellow
-    "#FFB6C1",  # pastel pink
-    "#D7BDE2",  # pastel purple
-    "#F6C6EA",  # light rose
-    "#F7D794",  # peach
-    "#E4C1F9",  # lavender
-]
+with open(".streamlit\palettes.toml", "rb") as f:
+    palettes = tomllib.load(f)
+
+with open(".streamlit\charts.toml", "rb") as f:
+    chart_cfg = tomllib.load(f)
+
+
+palette_blue = palettes["PALETTE_BLUE"]
+palette_green = palettes["PALETTE_GREEN"]
+palette_other = palettes["PALETTE_OTHER"]
+palette_visible = palettes["PALETTE_VISIBLE"]
+palette_top=palettes["PALETTE_TOP"]
+
+line1 = chart_cfg["line"]["line1"]
+line2 = chart_cfg["line"]["line2"]
+line3 = chart_cfg["line"]["line3"]
+line4 = chart_cfg["line"]["line4"]
+layout_cfg = chart_cfg["layout"]
+
 
 
 custom_colors = {
-    "Price with Tax":palette_blue[0],  
-    "Price without Tax": palette_green[0],   # Powder blue
+    "Price with Tax":palette_visible[0],  
+    "Price without Tax": palette_visible[1],   # Powder blue
    # "vat": "#8DDC99"      # Muted salmon/peach  #66CDAA  #8EE5EE
 }
 
@@ -72,7 +68,6 @@ units_selection = [
 # Define the threshold date
 threshold = pd.Timestamp('2016-01-04')
 threshold_str=threshold .strftime("%Y-%m-%d")
-
 
 
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
@@ -110,10 +105,8 @@ df.dropna()
 category="Oil Products"
 subcategory="Oil Products"
 
-
 #✅-----------------------BRENT DATA EXTRACTION-----------------------------------------------------
-#last_month="2025-09-30"
-brent_raw_df=pd.read_csv(f"data/{latest_date_str}_EIA_brent_weekly.csv",parse_dates=["Date"])
+brent_raw_df=pd.read_csv(f"data/{latest_date_str}_EIA_brent_daily.csv",parse_dates=["Date"])
 brent_df=(
             brent_raw_df
             .dropna()
@@ -122,20 +115,27 @@ brent_df=(
             
     )
 brent_df = brent_df.copy()  # recommended
-brent_df["Brent_norm"] = brent_df["Brent_Price"] / brent_df["Brent_Price"].iloc[0]
+brent_df["Brent_norm"] = brent_df["Brent_Price"] / brent_df["Brent_Price"].iloc[-1]
+weekly_brent_df = (
+    brent_df
+    .set_index("Date")
+    .resample("W")[
+        ["Brent_Price", "Brent_EURMWh", "Brent_norm"]
+    ]
+    .mean()
+    .reset_index()
+)
 #✅-----------------------BRENT DATA EXTRACTION-----------------------------------------------------
 
 
 #✅--------------------------------------------------------------------
 #1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️⃣1️
-st.title(f" ⛽ {category} Prices")
-st.markdown(f"""
-            ### 📊 Oil Products Price - cross country view (data from {threshold_str})
-            
-            """)
-st.markdown(""" 
-            source: EU DG Energy - weekly data 
-                        """)
+st.title(f" ⛽ Oil Products Prices | 🇪🇺")
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
+st.markdown(f"### 📊 Oil product prices — cross-country view ")
+st.caption("Source: European Commission DG Energy • Weekly data, published every Thursday")
 
 products_selection=(
                     df["Fuel_Type"]
@@ -285,11 +285,10 @@ st.divider()  # <--- Streamlit's built-in separator
 #-------------------------------------------------------------------------
 #2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣2️⃣
 st.markdown("""
-            ### 📈 Oil Products Price - single country historical trend
+            ### 📈 Oil product prices | 🇪🇺 - single country historical trend
             """)
-st.markdown(""" 
-            source: EU DG Energy - weekly data - nominals terms
-                        """)
+st.caption("Source: European Commission DG Energy • Weekly data, published every Thursday")
+                        
 countries_selection=(
                     df["Country"]
                    .unique()
@@ -326,26 +325,10 @@ fig2 = make_subplots(
                         shared_xaxes=True,
                         vertical_spacing=0.1,
                         subplot_titles=(
-                            f"{selected_product} || Historical Prices || Week {selected_week}",
-                            "Weekly Variation [%]"
+                            f"{selected_product} | Historical Prices | {selected_country} | Week {selected_week}",
+                            f"Weekly Variation [%] | {selected_country} "
                         )
                     )
-
-fig2.add_trace(
-        go.Scatter(
-                    x=df_filtered_fig2.index,
-                    y=df_filtered_fig2["Price"],
-                    name=f"{selected_product} | {selected_country}",
-                   # fill="tozeroy",
-                    mode="lines",
-                    line=dict(
-                        color=palette_blue[3] ,           #custom_colors.get(price_type, None),
-                        shape="linear"
-                    )
-                ),
-                row=1,
-                col=1
-    )
 
 fig2.add_trace(
         go.Scatter(
@@ -355,13 +338,36 @@ fig2.add_trace(
                     #fill="tozeroy",
                     mode="lines",
                     line=dict(
-                        color=palette_other[3] ,           #custom_colors.get(price_type, None),
-                        shape="linear"
-                    )
+                        color=palette_top[0],
+                        width=line1["width"],
+                        dash=line1["dash"],
+                        shape=line1["shape"],
+                    ),
                 ),
                 row=1,
                 col=1
     )
+
+
+
+fig2.add_trace(
+        go.Scatter(
+                    x=df_filtered_fig2.index,
+                    y=df_filtered_fig2["Price"],
+                    name=f"{selected_product} | {selected_country}",
+                   # fill="tozeroy",
+                    mode="lines",
+                    line=dict(
+                        color=palette_visible[0],
+                        width=line2["width"],
+                        dash=line2["dash"],
+                        shape=line2["shape"],
+                    ),
+                ),
+                row=1,
+                col=1
+    )
+
 
 
 # --- Step 4: Add Price_delta_forward to row=2 ---
@@ -369,8 +375,11 @@ fig2.add_trace(
     go.Bar(
                 x=df_filtered_fig2.index,
                 y=df_filtered_fig2["Price_delta_forward"] * 100,  # Convert to percentage
-                name="Weekly % Change",
-                marker_color=palette_blue[3]
+                name=f"Weekly % Change | {selected_country}",
+                marker_color=[
+                    palette_top[8] if v < 0 else palette_top[9]
+                        for v in df_filtered_fig2["Price_delta_forward"]
+                    ]
             ),
             row=2,
             col=1
@@ -412,12 +421,11 @@ st.divider()  # <--- Streamlit's built-in separator
 st.markdown("""
             ### 📈 Correlation Energy Component vs Brent 
             """)
-st.markdown(""" 
-            source: EU DG Energy - weekly data - nominals terms | EIA Brent weekly data
+st.caption(""" 
+            source: EU DG Energy - weekly data - nominals terms | EIA Brent daily data
                         """)
 
 fig3 = go.Figure()
-
 
 fig3.add_trace(
     go.Scatter(
@@ -426,10 +434,11 @@ fig3.add_trace(
         name=f"{selected_product} | energy | {selected_country}",
        # fill="tozeroy",
         mode="lines",
-        line=dict(
-            color=palette_blue[3],
-            shape="linear"
-        )
+        line=dict(      color=palette_top[0],
+                        width=line2["width"],
+                        dash=line2["dash"],
+                        shape=line2["shape"],
+                    ),
     )
 )
 
@@ -442,9 +451,11 @@ fig3.add_trace(
                     #fill="tozeroy",
                     mode="lines",
                     line=dict(
-                        color=palette_other[2],
-                        shape="linear"
-                    )
+                        color=palette_visible[0],
+                        width=line3["width"],
+                        dash=line3["dash"],
+                        shape=line3["shape"],
+                    ),
                 ),
 
     )
@@ -461,9 +472,7 @@ fig3.update_layout(
 
 )
 
-
- 
-       
+    
 
 
 # Display in Streamlit

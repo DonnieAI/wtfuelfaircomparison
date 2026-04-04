@@ -16,50 +16,37 @@ import glob
 st.set_page_config(page_title="Dashboard", layout="wide")
 from utils import apply_style_and_logo
 apply_style_and_logo()
+#-----------------------------------------------------
+#---------GRAPHICS------------------------------------
+#-----------------------------------------------------
+
+import tomllib
+
+with open(".streamlit\palettes.toml", "rb") as f:
+    palettes = tomllib.load(f)
+
+with open(".streamlit\charts.toml", "rb") as f:
+    chart_cfg = tomllib.load(f)
 
 
-palette_blue = [
-    "#A7D5F2",  # light blue
-    "#94CCE8",
-    "#81C3DD",
-    "#6FBBD3",
-    "#5DB2C8",
-    "#A9DEF9",  # baby blue
-]
+palette_blue = palettes["PALETTE_BLUE"]
+palette_green = palettes["PALETTE_GREEN"]
+palette_other = palettes["PALETTE_OTHER"]
+palette_visible = palettes["PALETTE_VISIBLE"]
+palette_top=palettes["PALETTE_TOP"]
 
-palette_green = [
-    "#6DC0B8",  # pastel teal
-    "#7DCFA8",
-    "#8DDC99",
-    "#9CE98A",
-    "#ABF67B",
-    "#C9F9D3",  # mint green
-    "#C4E17F",  # lime green
-]
+line1 = chart_cfg["line"]["line1"]
+line2 = chart_cfg["line"]["line2"]
+line3 = chart_cfg["line"]["line3"]
+line4 = chart_cfg["line"]["line4"]
+layout_cfg = chart_cfg["layout"]
 
-palette_other = [
-    "#FFD7BA",  # pastel orange
-    "#FFE29A",  # pastel yellow
-    "#FFB6C1",  # pastel pink
-    "#D7BDE2",  # pastel purple
-    "#F6C6EA",  # light rose
-    "#F7D794",  # peach
-    "#E4C1F9",  # lavender
-]
 
-custom_colors = {
-    "Crude oil, average": "#A7D5F2",  # blue
-    "Crude oil, Brent": "#7DCFA8",    # orange
-    "Crude oil, Dubai": "#9CE98A",    # green
-    "Crude oil, WTI": "#ABF67B"       # red
-}
 
-series_colors = {
-    "Crude oil, average": "#5DB2C8",  # stronger blue-teal
-    "Crude oil, Brent": "#6DC0B8",    # teal
-    "Crude oil, Dubai": "#FFD7BA",    # pastel orange
-    "Crude oil, WTI": "#D7BDE2"       # pastel purple
-}
+
+
+
+
 
 def load_latest_crude_file(folder="data"):
     # Pattern to match files like 2025-08-31_WB_crude_oils_monthly.csv
@@ -132,7 +119,7 @@ st.title("🛢️ Crude oil prices")
 st.divider()  # <--- Streamlit's built-in separator
 #-----------------------------------------------------
 
-st.markdown("### 📊 Monthly view of major crude oil indicators.")
+st.markdown("### 📊 Monthly view of major crude oil indicators")
 st.caption(f"Source: World Bank monthly data • Updated from {threshold_str}")
 
 #------------------------------------------------------------------------------
@@ -141,12 +128,31 @@ st.caption(f"Source: World Bank monthly data • Updated from {threshold_str}")
 
 fig1 = go.Figure()
 
+series_colors = {
+    "Crude oil, average": "#5DB2C8",  # stronger blue-teal
+    "Crude oil, Brent": palette_top[0],    # teal
+    "Crude oil, Dubai": "#FFD7BA",    # pastel orange
+    "Crude oil, WTI": "#D7BDE2"       # pastel purple
+}
+
+
+line_styles = {
+    "Crude oil, average": line1,
+    "Crude oil, Brent": line2,
+    "Crude oil, Dubai": line3,
+    "Crude oil, WTI": line4,
+}
+
+
 for col in [
     "Crude oil, average",
     "Crude oil, Brent",
     "Crude oil, Dubai",
     "Crude oil, WTI"
 ]:
+     
+    style = line_styles[col]
+
     fig1.add_trace(
         go.Scatter(
             x=crudes_df["Date"],
@@ -155,7 +161,9 @@ for col in [
             name=col.replace("Crude oil, ", ""),
             line=dict(
                 color=series_colors[col],
-                width=3
+                width=style["width"],
+                dash=style["dash"],
+                shape=style["shape"],
             ),
             hovertemplate=(
                 "<b>%{fullData.name}</b><br>"
@@ -166,8 +174,9 @@ for col in [
         )
     )
 
+
 fig1.update_layout(
-    title="Crude Oil Prices",
+    title=f"Crude Oil Prices (USD/bbl) |  up to {last_month.strftime('%b %Y')}",
     xaxis_title="Date",
     yaxis_title="Price (USD per barrel)",
     legend_title="Benchmark",
@@ -189,10 +198,9 @@ st.divider()  # <--- Streamlit's built-in separator
 # ------------------------------------------------------------------------------
 crudes_df["SPREAD BRENT-DUBAI"] = crudes_df["Crude oil, Brent"] - crudes_df["Crude oil, Dubai"]
 crudes_df["SPREAD BRENT-WTI"] = crudes_df["Crude oil, Brent"] - crudes_df["Crude oil, WTI"]
-
 spread_colors = {
-    "SPREAD BRENT-DUBAI": "#7DCFA8",  # green-teal
-    "SPREAD BRENT-WTI": "#6FBBD3"     # medium blue
+    "SPREAD BRENT-DUBAI": palette_visible[4],  # green-teal
+    "SPREAD BRENT-WTI": palette_blue[3]  # medium blue
 }
 
 fig2 = go.Figure()
@@ -230,7 +238,7 @@ fig2.add_trace(
 )
 
 fig2.update_layout(
-    title="Crude Oil Price Spreads",
+    title=f"Crude Oil Price Spreads - up to {last_month.strftime('%b %Y')}",
     xaxis_title="Date",
     yaxis_title="Spread (USD per barrel)",
     legend_title="Spread",
@@ -255,7 +263,6 @@ st.divider()  # <--- Streamlit's built-in separator
 # ------------------------------------------------------------------------------
 # 📈 BOX NARRATIVE
 # ------------------------------------------------------------------------------
-import pandas as pd
 
 # Latest snapshot
 last_date = crudes_df["Date"].max()
@@ -304,15 +311,15 @@ oil_narrative = f"""
 
 st.markdown(oil_narrative, unsafe_allow_html=True)
 
-
 #-----------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
 #-----------------------------------------------------
 
-
 # ------------------------------------------------------------------------------
 # 📈 FIG 3 - FOCUS BRENT YTD
 # ------------------------------------------------------------------------------
+st.markdown("### 🔍 Brent YTD vs historical range")
+st.caption(f"Source: World Bank monthly data • Updated from {threshold_str}")
 
 latest_date = brent_df["Date"].max()
 latest_year = latest_date.year
@@ -322,7 +329,7 @@ brent_ytd["MonthNum"] = brent_ytd["Date"].dt.month
 
 hist_line_color = palette_blue[2]      # soft blue
 hist_fill_color = "rgba(129, 195, 221, 0.18)"
-ytd_line_color = palette_green[0]      # teal
+ytd_line_color = palette_top[0]      # teal
 ytd_marker_color = palette_other[0]    # peach
 
 fig3 = go.Figure()
@@ -382,7 +389,7 @@ fig3.add_trace(
 )
 
 fig3.update_layout(
-    title=f"Brent YTD versus historical monthly range ({latest_year})",
+    title=f"Brent YTD versus historical monthly range ({latest_year}) -up to {last_month.strftime('%b %Y')}",
     xaxis=dict(
         title="Month",
         tickmode="array",

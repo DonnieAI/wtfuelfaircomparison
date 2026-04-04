@@ -17,40 +17,33 @@ apply_style_and_logo()
 
 #GRAPHICS----------------------------------------------
 
-palette_blue = [
-    "#A7D5F2",  # light blue
-    "#94CCE8",
-    "#81C3DD",
-    "#6FBBD3",
-    "#5DB2C8",
-    "#A9DEF9",  # baby blue
-]
+import tomllib
 
-palette_green = [
-    "#6DC0B8",  # pastel teal
-    "#7DCFA8",
-    "#8DDC99",
-    "#9CE98A",
-    "#ABF67B",
-    "#C9F9D3",  # mint green
-    "#C4E17F",  # lime green
-]
+with open(".streamlit\palettes.toml", "rb") as f:
+    palettes = tomllib.load(f)
 
-palette_other = [
-    "#FFD7BA",  # pastel orange
-    "#FFE29A",  # pastel yellow
-    "#FFB6C1",  # pastel pink
-    "#D7BDE2",  # pastel purple
-    "#F6C6EA",  # light rose
-    "#F7D794",  # peach
-    "#E4C1F9",  # lavender
-]
+with open(".streamlit\charts.toml", "rb") as f:
+    chart_cfg = tomllib.load(f)
+
+
+palette_blue = palettes["PALETTE_BLUE"]
+palette_green = palettes["PALETTE_GREEN"]
+palette_other = palettes["PALETTE_OTHER"]
+palette_visible = palettes["PALETTE_VISIBLE"]
+palette_top=palettes["PALETTE_TOP"]
+
+line1 = chart_cfg["line"]["line1"]
+line2 = chart_cfg["line"]["line2"]
+line3 = chart_cfg["line"]["line3"]
+line4 = chart_cfg["line"]["line4"]
+layout_cfg = chart_cfg["layout"]
+
 
 
 custom_colors = {
-    "energy": "#A7D5F2",  
-    "taxes": "#6DC0B8",   # Powder blue
-    "vat": "#8DDC99"      # Muted salmon/peach  #66CDAA  #8EE5EE
+    "energy": palette_green[0], 
+    "taxes": palette_other[0],   # Powder blue
+    "vat": palette_other[3]      # Muted salmon/peach  #66CDAA  #8EE5EE
 }
 
 
@@ -490,7 +483,7 @@ fig3.add_trace(
         y=df_filtered_2["variation"],
         name="Variation (%)",
         marker_color=[
-            "#F5B7B1" if v < 0 else "#A9DFBF"
+          palette_top[8] if v < 0 else palette_top[9]
             for v in df_filtered_2["variation"]
         ]
     ),
