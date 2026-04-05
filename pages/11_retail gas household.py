@@ -56,9 +56,9 @@ custom_colors = {
 
 #🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
 FOLDER="EUROSTAT"
-flow_id="nrg_pc_203"
+flow_id="nrg_pc_202"
 category="gas"
-sub_category="C&I"
+sub_category="householders"
 latest_semester="2025-S1"
 latest_month="2025-10-31"
 #🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
@@ -67,8 +67,7 @@ latest_month="2025-10-31"
 #✅------------------------DATA EXTRACTION-----------------------------------------------------
 df=pd.read_csv(f"data/{latest_semester}_{flow_id}_{category}_{sub_category}_data.csv")
 df.info()
-
-
+#1 GJ = 0.2778 MWh (approx.)
 #--Band defintion
 available_bands = df["nrg_cons"].unique()
 def create_band_label_dict(df, column_name):
@@ -79,54 +78,51 @@ band_labels = create_band_label_dict(df, "nrg_cons")
 last_value = list(band_labels.values())[-1]
 print(band_labels)
 
-
 start_date=min(df["add_formal_time"])
 
 ttf_df = pd.read_csv(f"data/{latest_month}_ttf.csv", parse_dates=['Date'])
 ttf_df=ttf_df.query("Date >=@start_date")
 
 #✅--------------------------------------------------------------------
-st.title(f" 🔥 {category} prices for {sub_category} 🏭")
+st.title(f" 🔥 {category} prices | 🏠 {sub_category} ")
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
+
 st.markdown(f"""
             ### 📊 Retail {category} price for {sub_category} - cross country view 
             
             """)
-st.markdown(""" 
-            source: EUROSTAT - bi-annual data (from 2007 onwards)
+st.caption(""" 
+            source: EUROSTAT - bi-annual data (from 2007 onwards) 
                         """)
 
+
+#---------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
-#--------------------------------------------------------
-st.markdown("""
-     #### Gas - Commercial & Industrial (C&I)
+#---------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
+st.markdown("""#### Gas - Household Conversion: 1 GJ ≈ 26.85 m³ of natural gas (based on EU average HHV)
 
-| Band               | Description            | Example Facility                        | Est. m³/year       |
-|--------------------|------------------------|-----------------------------------------|--------------------|
-| GJ_LT1000          | <1,000 GJ/year         | Small restaurant or office              | <26,850            |
-| GJ1000-9999        | 1,000–9,999 GJ/year    | Medium hotel, school                    | 26,850–268,400     |
-| GJ10000-99999      | 10,000–99,999 GJ/year  | Large bakery, brewery                   | 268,500–2,684,900  |
-| GJ100000-999999    | 100,000–999,999 GJ/year| Chemical plants                         | 2.685M–26.85M      |
-| GJ1000000-3999999  | 1M–3.99M GJ/year       | Steel mills, fertilizer plants          | 26.85M–107.3M      |
-| GJ_GE4000000       | ≥4M GJ/year            | Petrochemical complexes                 | 107.4M+            |
-| TOT_GJ             | Total industrial gas consumption | Aggregate                     | -                  |       
-           
-            
-            
-            
-            """)
+| Band       | Description              | Example Usage                             | Est. m³/year   |
+|------------|--------------------------|--------------------------------------------|----------------|
+| GJ_LT20    | <20 GJ/year              | Small apartment or single-person home      | <537           |
+| GJ20-199   | 20–199 GJ/year           | Average single-family home                 | 537–5,345      |
+| GJ_GE200   | 200+ GJ/year             | Large home or villa                        | 5,370+         |
+| TOT_GJ     | Total household gas consumption | Aggregate                            | -              |
+""")
 
 #---------------------------------------------------------------------------------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
-#--------------------------------------------------------
-
+#--------------------------------------------------------------------------------------------
 
 # Reverse mapping for lookup
 label_to_code = {v: k for k, v in band_labels.items()}
 selected_label = st.selectbox(
-    "Select consumption band (TOT_GJ as default) ",
+    "Select consumption band (GJ_GE200 as default) ",
     options=band_labels.values(),
-    index=list(band_labels.values()).index("TOT_GJ")  # 👈 default index
+    index=list(band_labels.values()).index("GJ_LT20")  # 👈 default index
 )
 selected_band = label_to_code[selected_label]
 available_semester = df["add_formal_time"].unique()
@@ -160,17 +156,6 @@ geo_order = (
     .sort_values("total", ascending=False)["geo"]
     .tolist()
 )
-
-pastel_blue_green = [
-    "#A7D5F2", "#94CCE8", "#81C3DD", "#6FBBD3", "#5DB2C8",
-    "#6DC0B8", "#7DCFA8", "#8DDC99", "#9CE98A", "#ABF67B"
-]
-
-custom_colors = {
-    "energy": "#A7D5F2",  
-    "taxes": "#6DC0B8",   # Powder blue
-    "vat": "#8DDC99"      # Muted salmon/peach  #66CDAA  #8EE5EE
-}
 
 df_melted["price"] = df_melted["price"]*1000  # Multiply price by 1000 (e.g., from €/kWh to €/MWh)
 # 💹FIG1A💹---------------------------------------------------------------------
@@ -230,15 +215,7 @@ df_selected_time["fiscal_impact"] = df_selected_time["fiscal_impact"].round(1)
 df_fiscal=df_selected_time[["geo","nrg_cons","fiscal_impact"]]
 #df_fiscal["nrg_cons_label"] = df_fiscal["nrg_cons"].map(band_labels)
 
-band_order = [
-    'GJ1000-9999',
-    'GJ10000-99999',
-    'GJ100000-999999',
-    'GJ1000000-3999999',
-    'GJ_LT1000',
-    'GJ_GE4000000',
-    'TOT_GJ'
-]
+band_order = ["GJ_LT20", "GJ20-199", "GJ_GE200", "TOT_GJ"]
 df_fiscal["nrg_cons"] = pd.Categorical(df_fiscal["nrg_cons"], categories=band_order, ordered=True)
 df_energy=df_selected_time[["geo","nrg_cons","energy"]]
 df_energy["nrg_cons"] = pd.Categorical(df_energy["nrg_cons"], categories=band_order, ordered=True)
@@ -319,15 +296,7 @@ st.markdown("""
 available_countries = df["geo"].unique()
 df["total"]=df["total"]*1000 # EUR/MWH
 selected_country = st.selectbox("Select country", sorted(available_countries))
-selected_bands = [
-    'GJ1000-9999',
-    'GJ10000-99999',
-    'GJ100000-999999',
-    'GJ1000000-3999999',
-    'GJ_LT1000',
-    'GJ_GE4000000',
-    'TOT_GJ'
-]
+selected_bands = ["GJ_LT20", "GJ20-199", "GJ_GE200"]
 df_filtered = df[
     (df["geo"] == selected_country) &
     (df["nrg_cons"].isin(selected_bands))
@@ -385,10 +354,6 @@ fig2a.update_layout(
 # Show Plotly chart
 st.plotly_chart(fig2a, use_container_width=True,key="historical_chart")
 
-#---------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------
-st.divider()  # <--- Streamlit's built-in separator
-#---------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------
+
 
 

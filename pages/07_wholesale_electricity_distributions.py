@@ -16,6 +16,12 @@ from utils import apply_style_and_logo
 apply_style_and_logo()
 
 
+#🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+latest_date=pd.Timestamp("2026-03-30")
+latest_date_str=latest_date.strftime("%Y-%m-%d")
+#🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+
+
 #GRAPHICS----------------------------------------------
 
 palette_blue = [
@@ -61,10 +67,13 @@ df = pd.read_parquet(file_path)
 # ==========================================================
 # Title
 # ==========================================================
-st.title("⚡ Wholesale Electricity Price Distribution")
+st.title("⚡ Wholesale Electricity Price - Distribution | 🇪🇺")
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
 
 st.markdown("### 📊 Histogram of hourly wholesale electricity prices by country")
-
+st.caption(f"source: EMEBER - daily data - up to {latest_date_str}")
 
 # ==========================================================
 # Country selector

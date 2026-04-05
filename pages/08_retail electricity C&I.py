@@ -81,12 +81,15 @@ start_date=min(df["add_formal_time"])
 
 
 #✅--------------------------------------------------------------------
-st.title(f" 🔌 {category} prices | {sub_category} 🏭")
+st.title(f" 🔌 {category} prices |🏭 {sub_category} ")
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
 st.markdown(f"""
             ### 📊 Retail {category} price for {sub_category} - cross country view 
             
             """)
-st.markdown(""" 
+st.caption(""" 
             source: EUROSTAT - bi-annual data (from 2007 onwards)
                         """)
 
@@ -371,7 +374,7 @@ st.divider()  # <--- Streamlit's built-in separator
 st.markdown(f"""
             ### 📈 Retail {category} price {sub_category} - single country historical trend
             """)
-st.markdown(""" 
+st.caption(""" 
             source: EUROSTAT - bi-annual data (from 2007 onwards) 
                         """)
 

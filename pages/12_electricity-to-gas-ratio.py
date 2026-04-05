@@ -104,7 +104,9 @@ print(band_labels_gas)
 
 #✅--------------------------------------------------------------------
 st.title("⚡🔥 Electricity-to-Gas Price Ratio for Industrial Consumers 🏭")
-
+#-----------------------------------------------------
+st.divider()  # <--- Streamlit's built-in separator
+#-----------------------------------------------------
 st.markdown(
     """
     ### 📊 Cross-country comparison of electricity-to-gas price ratios for industrial consumers  
@@ -112,12 +114,9 @@ st.markdown(
     """
 )
 
-st.markdown(
-    """
-    **Source:** Eurostat, bi-annual data (2007 onwards)
-    """
-)
-
+st.caption(""" 
+            source: EUROSTAT - bi-annual data (from 2007 onwards) 
+                        """)
 #---------------------------------------------------------------------------------------------------------------------------
 st.divider()  # <--- Streamlit's built-in separator
 #--------------------------------------------------------
