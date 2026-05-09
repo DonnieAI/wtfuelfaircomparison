@@ -44,10 +44,6 @@ layout_cfg = chart_cfg["layout"]
 
 
 
-
-
-
-
 def load_latest_crude_file(folder="data"):
     # Pattern to match files like 2025-08-31_WB_crude_oils_monthly.csv
     pattern = os.path.join(folder, "*_WB_crude_oils_monthly.csv")
