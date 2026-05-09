@@ -29,10 +29,10 @@ latest_date_str=latest_date.strftime("%Y-%m-%d")
 
 import tomllib
 
-with open(".streamlit\palettes.toml", "rb") as f:
+with open(".streamlit/palettes.toml", "rb") as f:
     palettes = tomllib.load(f)
 
-with open(".streamlit\charts.toml", "rb") as f:
+with open(".streamlit/charts.toml", "rb") as f:
     chart_cfg = tomllib.load(f)
 
 
